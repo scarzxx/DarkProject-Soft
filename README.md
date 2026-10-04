@@ -6,48 +6,50 @@ Modern desktop configurator for supported **Dark Project** keyboards.
 
 ## Stack
 
-- **Tauri 2** — desktop shell
-- **Rust** — HID/device/protocol backend
-- **React + TypeScript** — UI
-- **hidapi** — native HID communication
+**Tauri 2 + Rust + React + TypeScript + hidapi**
 
-## Goal
+## Implemented
 
-Build a fast native configurator with a polished UI for:
+- native Bushido HID discovery/readback
+- 3 hardware profiles
+- verified RGB effects, color, brightness, speed and direction
+- polling rate, input latency, debounce and sleep timer
+- Base/FN key remapping primitives
+- Snap Tap (up to 20 pairs)
+- keyboard macro event writer/editor
+- `.dp` import/export editor
+- interactive Bushido 87 ANSI keyboard UI
+- browser preview mode when Tauri/HID is unavailable
 
-- RGB effects and per-key lighting
-- Key remapping + FN layer
-- Snap Tap
-- Macros
-- Polling rate, latency, debounce and sleep settings
-- Hardware profiles
-- `.dp` profile import/export
-- Multiple Dark Project keyboard models through a capability-based device layer
+## Bushido
 
-## Current research target
+`DPKB_BUSHIDO_87_ANSI` · VID `342D` · PID `E40F` · Feature Report `7` · `CommonKeyboardSeries`
 
-**DPKB_BUSHIDO_87_ANSI / ALU87B Bushido**
+## Run
 
-- VID: `0x342D`
-- PID: `0xE40F`
-- HID Feature Report ID: `7`
-- Protocol family: `CommonKeyboardSeries`
-- Hardware profiles: `3`
+```bash
+npm install
+npm run tauri:dev
+```
 
-The protocol notes are based on observed device traffic, exported `.dp` profiles and behavior of the vendor web configurator. We do **not** redistribute vendor source code or firmware.
+Build installer/app bundle:
+
+```bash
+npm run tauri:build
+```
+
+Windows CI checks the frontend and Rust backend on every push.
+
+## Safety
+
+Firmware flashing / bootloader commands are intentionally **not implemented**. Hardware writes are limited to configuration operations derived from observed device traffic and exported profiles. Test new device models before enabling writes.
 
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [UI design](docs/DESIGN.md)
-- [Protocol notes](docs/PROTOCOL.md)
-- [`.dp` profile format](docs/PROFILE_FORMAT.md)
+- [Protocol](docs/PROTOCOL.md)
+- [`.dp` format](docs/PROFILE_FORMAT.md)
 - [Devices](docs/DEVICES.md)
-- [Research notes](docs/RESEARCH.md)
+- [Research](docs/RESEARCH.md)
 - [Roadmap](docs/ROADMAP.md)
-
-## Status
-
-Early development / protocol implementation.
-
-First milestone: connect to Bushido, read all three profiles and display the current configuration in the desktop UI before enabling writes.
