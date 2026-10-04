@@ -20,3 +20,13 @@ jobs:
         run: npm run build
       - name: Check Rust backend
         run: cargo check --manifest-path src-tauri/Cargo.toml
+      - name: Build Windows executable
+        run: npm run tauri:build -- --no-bundle
+      - name: Upload Dark Control executable
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dark-Control-Windows-x64
+          path: src-tauri/target/release/dark-control.exe
+          if-no-files-found: error
+          retention-days: 14
