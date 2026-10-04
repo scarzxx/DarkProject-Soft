@@ -4,6 +4,13 @@ export type MessageParameters = Readonly<Record<string, string | number>>;
 export const LANGUAGE_KEY = "dark-control.language";
 
 export const MESSAGES = {
+  "System tray": { cs: "Systémová lišta", sk: "Systémová lišta" },
+  "Keep Dark Control running in the background.": { cs: "Nechte Dark Control běžet na pozadí.", sk: "Nechajte Dark Control bežať na pozadí." },
+  "Close to tray": { cs: "Při zavření skrýt do lišty", sk: "Pri zatvorení skryť do lišty" },
+  "Closing the window hides it in the system tray. Click its icon to reopen it, or choose Exit to quit.": { cs: "Zavření okna skryje aplikaci do systémové lišty. Kliknutím na ikonu ji znovu otevřete, volbou Ukončit ji vypnete.", sk: "Zatvorenie okna skryje aplikáciu do systémovej lišty. Kliknutím na ikonu ju znova otvoríte, voľbou Ukončiť ju vypnete." },
+  "Hide to tray": { cs: "Skrýt do lišty", sk: "Skryť do lišty" },
+  "System tray is available in the desktop app only.": { cs: "Systémová lišta je dostupná pouze v desktopové aplikaci.", sk: "Systémová lišta je dostupná iba v desktopovej aplikácii." },
+  "Could not configure the system tray.": { cs: "Nepodařilo se nastavit systémovou lištu.", sk: "Nepodarilo sa nastaviť systémovú lištu." },
   "Search keyboards": { cs: "Hledat klávesnici", sk: "Hľadať klávesnicu" },
   "No keyboards found": { cs: "Žádná klávesnice nenalezena", sk: "Žiadna klávesnica sa nenašla" },
   "Unknown": { cs: "Neznámé", sk: "Neznáme" },

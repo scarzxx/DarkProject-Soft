@@ -1,9 +1,10 @@
-import { Check, Languages, Monitor, Moon, RotateCcw, Sun } from "lucide-react";
+import { Check, Languages, Monitor, Moon, PanelBottom, RotateCcw, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { useLanguage } from "../lib/i18n";
 import { LANGUAGE_KEY, resolveLanguage } from "../lib/messages";
 import type { Language, MessageKey } from "../lib/messages";
+import { getCloseToTray, hideToTray, setCloseToTray, setTrayLanguage, supportsTray } from "../lib/tray";
 type ThemeMode = "system" | "dark" | "light";
 
 const THEME_KEY = "dark-control.theme";
@@ -16,7 +17,48 @@ function initialTheme(): ThemeMode {
 export default function PreferencesOverlay() {
   const { language, setLanguage, t } = useLanguage();
   const [theme, setTheme] = useState<ThemeMode>(initialTheme);
+  const [closeToTray, setTrayEnabled] = useState(false);
+  const [trayReady, setTrayReady] = useState(false);
+  const [trayBusy, setTrayBusy] = useState(supportsTray);
+  const [trayError, setTrayError] = useState("");
   const themeLabels: Record<ThemeMode, MessageKey> = { system: "System", dark: "Dark", light: "Light" };
+
+  useEffect(() => {
+    let active = true;
+    getCloseToTray().then((enabled) => {
+      if (active) { setTrayEnabled(enabled); setTrayReady(supportsTray()); }
+    }).catch((error: unknown) => {
+      if (active) setTrayError(String(error));
+    }).finally(() => { if (active) setTrayBusy(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setTrayLanguage(language).catch((error: unknown) => {
+      if (active) setTrayError(String(error));
+    });
+    return () => { active = false; };
+  }, [language]);
+
+  const updateTray = async (enabled: boolean) => {
+    setTrayBusy(true);
+    setTrayError("");
+    try {
+      await setCloseToTray(enabled);
+      setTrayEnabled(enabled);
+    } catch (error: unknown) {
+      setTrayError(String(error));
+    } finally { setTrayBusy(false); }
+  };
+
+  const hideWindow = async () => {
+    setTrayBusy(true);
+    setTrayError("");
+    try { await hideToTray(); }
+    catch (error: unknown) { setTrayError(String(error)); }
+    finally { setTrayBusy(false); }
+  };
 
   const resolvedTheme = useMemo(() => {
     if (theme !== "system") return theme;
@@ -37,11 +79,12 @@ export default function PreferencesOverlay() {
     return () => media.removeEventListener("change", apply);
   }, [theme]);
 
-  const reset = () => {
+  const reset = async () => {
     localStorage.removeItem(LANGUAGE_KEY);
     localStorage.removeItem(THEME_KEY);
     setLanguage(resolveLanguage(null, navigator.language));
     setTheme("system");
+    if (trayReady) await updateTray(false);
   };
 
   const languageOptions: Array<{ value: Language; label: string; flag: string }> = [
@@ -97,10 +140,24 @@ export default function PreferencesOverlay() {
           <div className="resolved-theme">{t("System")}: <b>{t(themeLabels[resolvedTheme])}</b></div>
         </article>
 
+        <article className="preference-card tray-card">
+          <div className="preference-card-head">
+            <span className="preference-icon"><PanelBottom size={20}/></span>
+            <div><strong>{t("System tray")}</strong><small>{t("Keep Dark Control running in the background.")}</small></div>
+          </div>
+          <div className="tray-preference-row">
+            <div><strong id="close-to-tray-label">{t("Close to tray")}</strong><p id="close-to-tray-description">{t("Closing the window hides it in the system tray. Click its icon to reopen it, or choose Exit to quit.")}</p></div>
+            <button type="button" role="switch" aria-checked={closeToTray} aria-labelledby="close-to-tray-label" aria-describedby="close-to-tray-description" className={`toggle ${closeToTray ? "on" : ""}`} disabled={!trayReady || trayBusy} onClick={() => updateTray(!closeToTray)}><i/></button>
+          </div>
+          {trayReady && <button type="button" className="reset-preferences tray-hide" disabled={!closeToTray || trayBusy} onClick={hideWindow}><PanelBottom size={15}/>{t("Hide to tray")}</button>}
+          {!supportsTray() && <p className="tray-note">{t("System tray is available in the desktop app only.")}</p>}
+          {trayError && <p className="tray-error" role="alert">{t("Could not configure the system tray.")} {trayError}</p>}
+        </article>
+
         <article className="preference-card app-card">
           <img src="/icon.png" alt="Dark Control"/>
           <div className="app-copy"><strong>{"Dark Control"}</strong><span>v0.4.0</span><p>{t("Community configurator for supported Dark Project keyboards.")}</p></div>
-          <button className="reset-preferences" onClick={reset}><RotateCcw size={15}/>{t("Reset preferences")}</button>
+          <button className="reset-preferences" disabled={trayBusy} onClick={reset}><RotateCcw size={15}/>{t("Reset preferences")}</button>
         </article>
       </div>
 

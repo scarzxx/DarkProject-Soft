@@ -2,6 +2,7 @@ mod device_manager;
 mod drivers;
 mod models;
 mod registry;
+mod tray;
 
 use models::{
     DeviceSummary, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding,
@@ -78,6 +79,8 @@ fn write_macro(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(tray::setup)
+        .on_window_event(tray::on_window_event)
         .invoke_handler(tauri::generate_handler![
             scan_devices,
             scan_device,
@@ -87,7 +90,11 @@ pub fn run() {
             apply_performance,
             apply_snap_tap,
             apply_key_binding,
-            write_macro
+            write_macro,
+            tray::get_close_to_tray,
+            tray::set_close_to_tray,
+            tray::set_tray_language,
+            tray::hide_to_tray
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dark Control");

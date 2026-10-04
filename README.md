@@ -24,6 +24,11 @@ Modern desktop configurator for supported **Dark Project** keyboards. Version **
 - browser preview mode when Tauri/HID is unavailable
 - searchable keyboard picker with layout and verification information
 - all four normalized vendor JSON tables imported from the supplied data ZIP
+- optional close to tray, immediate hide button and localized open/exit menu
+
+In Settings, enable **Close to tray** to keep the app running when its window is
+closed. Click the tray icon to restore it, or use its **Exit** menu item to quit.
+The option defaults to off and persists across restarts.
 
 Rebuild application metadata from the preserved generated tables:
 
