@@ -1,66 +1,54 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { DeviceSummary, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding, SnapPair } from "./types";
 
+import { DEVICE_REGISTRY, getDeviceMetadata, hasVerifiedDriver, previewDevice } from "../data/registry";
+import { getDefaultProfile } from "../data/defaults";
+
 const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-const MOCK: ProfileState = {
-  profile: 2,
-  lighting: { effect: 8, brightness: 100, speed: 75, direction: 0, color: [148, 5, 57], multiColor: false },
-  performance: { pollingRate: 1000, inputLatency: 2, debounce: 5, sleepTime: 10 },
-  snapTapEnabled: false,
-  snapTapPairs: [{ kind: 0, key1: 4, key2: 7 }],
-  keyBindings: [],
-  fnKeyBindings: [],
-  macros: [],
-};
-
-export async function scanDevice(): Promise<DeviceSummary> {
-  if (!isTauri()) return {
-    connected: false,
-    productName: "DPKB_BUSHIDO_87_ANSI",
-    vendorId: 0x342d,
-    productId: 0xe40f,
-    firmware: "preview",
-    layout: "ANSI",
-    protocol: "CommonKeyboardSeries",
-    profiles: 3,
-    activeProfile: 2,
-    capabilities: {
-      lighting: true,
-      customLighting: true,
-      keybindings: true,
-      fnLayer: true,
-      snapTap: true,
-      macros: true,
-      performance: false,
-      profiles: true,
-      maxSnapTapPairs: 20,
-      lightingEffects: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,19],
-    },
-  };
-  return invoke("scan_device");
+/** List connected native devices, or registry models in the browser preview. */
+export async function listDevices(): Promise<DeviceSummary[]> {
+  return isTauri() ? invoke("scan_devices") : DEVICE_REGISTRY.map(previewDevice);
 }
 
-export async function readProfile(profile: number): Promise<ProfileState> {
-  if (!isTauri()) return { ...structuredClone(MOCK), profile };
-  return invoke("read_profile", { profile });
+function requirePreviewDevice(deviceId?: string): DeviceSummary {
+  const model = deviceId !== undefined ? getDeviceMetadata(deviceId)
+    : DEVICE_REGISTRY.find(hasVerifiedDriver);
+  if (!model) throw new Error("Selected device is no longer connected");
+  return previewDevice(model);
 }
 
-export async function switchProfile(profile: number): Promise<void> {
-  if (isTauri()) await invoke("switch_profile", { profile });
+async function command<T>(name: string, payload: Record<string, unknown>, deviceId?: string): Promise<T | undefined> {
+  if (isTauri()) return invoke<T>(name, { ...payload, deviceId });
+  if (!requirePreviewDevice(deviceId).verified) {
+    throw new Error("Device is unverified; HID commands are disabled");
+  }
 }
-export async function applyLighting(profile: number, settings: LightingSettings): Promise<void> {
-  if (isTauri()) await invoke("apply_lighting", { profile, settings });
+
+export async function scanDevice(deviceId?: string): Promise<DeviceSummary> {
+  return isTauri() ? invoke("scan_device", { deviceId }) : requirePreviewDevice(deviceId);
 }
-export async function applyPerformance(profile: number, settings: PerformanceSettings): Promise<void> {
-  if (isTauri()) await invoke("apply_performance", { profile, settings });
+
+export async function readProfile(profile: number, deviceId?: string): Promise<ProfileState> {
+  const result = await command<ProfileState>("read_profile", { profile }, deviceId);
+  return result ?? getDefaultProfile(requirePreviewDevice(deviceId).registryId!, profile);
 }
-export async function applySnapTap(profile: number, enabled: boolean, pairs: SnapPair[]): Promise<void> {
-  if (isTauri()) await invoke("apply_snap_tap", { profile, enabled, pairs });
+
+export async function switchProfile(profile: number, deviceId?: string): Promise<void> {
+  await command("switch_profile", { profile }, deviceId);
 }
-export async function applyKeyBinding(profile: number, layer: number, patch: RawKeyBinding): Promise<void> {
-  if (isTauri()) await invoke("apply_key_binding", { profile, layer, patch });
+export async function applyLighting(profile: number, settings: LightingSettings, deviceId?: string): Promise<void> {
+  await command("apply_lighting", { profile, settings }, deviceId);
 }
-export async function writeMacro(macroId: number, events: MacroEvent[]): Promise<void> {
-  if (isTauri()) await invoke("write_macro", { macroId, events });
+export async function applyPerformance(profile: number, settings: PerformanceSettings, deviceId?: string): Promise<void> {
+  await command("apply_performance", { profile, settings }, deviceId);
+}
+export async function applySnapTap(profile: number, enabled: boolean, pairs: SnapPair[], deviceId?: string): Promise<void> {
+  await command("apply_snap_tap", { profile, enabled, pairs }, deviceId);
+}
+export async function applyKeyBinding(profile: number, layer: number, patch: RawKeyBinding, deviceId?: string): Promise<void> {
+  await command("apply_key_binding", { profile, layer, patch }, deviceId);
+}
+export async function writeMacro(macroId: number, events: MacroEvent[], deviceId?: string): Promise<void> {
+  await command("write_macro", { macroId, events }, deviceId);
 }

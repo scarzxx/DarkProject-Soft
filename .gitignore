@@ -7,3 +7,4 @@ src-tauri/target/
 *.log
 .env
 .history
+registry/bundle-extraction/

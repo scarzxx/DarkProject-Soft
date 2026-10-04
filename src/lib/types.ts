@@ -11,9 +11,17 @@ export interface DeviceCapabilities {
   profiles: boolean;
   maxSnapTapPairs: number;
   lightingEffects: number[];
+  tft: boolean;
+  sync: boolean;
+  actuation: boolean;
 }
 
 export interface DeviceSummary {
+  id: string;
+  registryId: string | null;
+  styleName: string | null;
+  verified: boolean;
+  known: boolean;
   connected: boolean;
   productName: string;
   serialNumber?: string | null;
@@ -25,6 +33,7 @@ export interface DeviceSummary {
   profiles: number;
   activeProfile: number;
   capabilities: DeviceCapabilities;
+  advertisedCapabilities: DeviceCapabilities;
 }
 
 export interface LightingSettings {

@@ -1,25 +1,74 @@
-export interface KeyDef {
+import { getLayout } from "./registry";
+import type { LayoutKey } from "./registry";
+
+export interface KeyDef extends LayoutKey {
   id: string;
   label: string;
   hid: number;
-  w?: number;
-  gap?: number;
-  special?: boolean;
+  slot?: number;
 }
 
-const k = (id: string, label: string, hid: number, w = 1, gap = 0, special = false): KeyDef => ({ id, label, hid, w, gap, special });
+const HID_BY_KEY: Readonly<Record<string, number>> = {
+  Escape: 41, Backquote: 53, Minus: 45, Equal: 46, Backspace: 42,
+  Tab: 43, CapsLock: 57, Enter: 40, Space: 44, BracketLeft: 47,
+  BracketRight: 48, Backslash: 49, Hash: 50, IntlBackslash: 100, IntlRo: 135,
+  IntlYen: 137, Semicolon: 51, Quote: 52, Comma: 54, Period: 55, Slash: 56,
+  PrintScreen: 70, ScrollLock: 71, Pause: 72, Insert: 73, Home: 74,
+  PageUp: 75, Delete: 76, End: 77, PageDown: 78, ArrowRight: 79,
+  ArrowLeft: 80, ArrowDown: 81, ArrowUp: 82, NumLock: 83,
+  NumpadDivide: 84, NumpadMultiply: 85, NumpadSubtract: 86, NumpadAdd: 87,
+  NumpadEnter: 88, Numpad0: 98, NumpadDecimal: 99, Menu: 101,
+  ControlLeft: 224, ShiftLeft: 225, AltLeft: 226, MetaLeft: 227,
+  ControlRight: 228, ShiftRight: 229, AltRight: 230, MetaRight: 231,
+};
+const LABELS: Readonly<Record<string, string>> = {
+  Escape: "Esc", Backquote: "~", Minus: "-", Equal: "+", Tab: "Tab",
+  CapsLock: "Caps", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
+  Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Hash: "#",
+  PrintScreen: "Print", ScrollLock: "Scrl", Insert: "Ins", Delete: "Del",
+  PageUp: "PgUp", PageDown: "PgDn", Space: "", Custom_Fnkey: "Fn",
+  ControlLeft: "Ctrl", ControlRight: "Ctrl", ShiftLeft: "Shift",
+  ShiftRight: "Shift", AltLeft: "Alt", AltRight: "Alt", MetaLeft: "Win",
+  MetaRight: "Win", Menu: "Menu", ArrowLeft: "\u2190", ArrowRight: "\u2192",
+  ArrowUp: "\u2191", ArrowDown: "\u2193",
+};
 
-export const ROWS: KeyDef[][] = [
-  [k("Escape","Esc",41),k("F1","F1",58,1,1.2),k("F2","F2",59),k("F3","F3",60),k("F4","F4",61),k("F5","F5",62,1,0.45),k("F6","F6",63),k("F7","F7",64),k("F8","F8",65),k("F9","F9",66,1,0.45),k("F10","F10",67),k("F11","F11",68),k("F12","F12",69),k("PrintScreen","Print",70,1,0.35),k("ScrollLock","Scrl",71),k("Pause","Pause",72)],
-  [k("Backquote","~",53),k("Digit1","1",30),k("Digit2","2",31),k("Digit3","3",32),k("Digit4","4",33),k("Digit5","5",34),k("Digit6","6",35),k("Digit7","7",36),k("Digit8","8",37),k("Digit9","9",38),k("Digit0","0",39),k("Minus","−",45),k("Equal","+",46),k("Backspace","Backspace",42,2),k("Insert","Ins",73,1,0.35),k("Home","Home",74),k("PageUp","PgUp",75)],
-  [k("Tab","Tab",43,1.5),k("KeyQ","Q",20),k("KeyW","W",26),k("KeyE","E",8),k("KeyR","R",21),k("KeyT","T",23),k("KeyY","Y",28),k("KeyU","U",24),k("KeyI","I",12),k("KeyO","O",18),k("KeyP","P",19),k("BracketLeft","[",47),k("BracketRight","]",48),k("Backslash","\\",49,1.5),k("Delete","Del",76,1,0.35),k("End","End",77),k("PageDown","PgDn",78)],
-  [k("CapsLock","Caps",57,1.75),k("KeyA","A",4),k("KeyS","S",22),k("KeyD","D",7),k("KeyF","F",9),k("KeyG","G",10),k("KeyH","H",11),k("KeyJ","J",13),k("KeyK","K",14),k("KeyL","L",15),k("Semicolon",";",51),k("Quote","'",52),k("Enter","Enter",40,2.25)],
-  [k("ShiftLeft","Shift",225,2.25),k("KeyZ","Z",29),k("KeyX","X",27),k("KeyC","C",6),k("KeyV","V",25),k("KeyB","B",5),k("KeyN","N",17),k("KeyM","M",16),k("Comma",",",54),k("Period",".",55),k("Slash","/",56),k("ShiftRight","Shift",229,2.75),k("ArrowUp","↑",82,1,1.35)],
-  [k("ControlLeft","Ctrl",224,1.25),k("MetaLeft","◆",227,1.25),k("AltLeft","Alt",226,1.25),k("Space","",44,6.25),k("AltRight","Alt",230,1.25),k("Custom_Fnkey","Fn",0,1.25,0,true),k("Menu","▤",101,1.25),k("ControlRight","Ctrl",228,1.25),k("ArrowLeft","←",80,1,0.35),k("ArrowDown","↓",81),k("ArrowRight","→",79)],
-];
+/** Convert physical browser key names to USB HID usage IDs. Unknown keys return 0. */
+export function keyHid(id: string): number {
+  if (/^Key[A-Z]$/.test(id)) return id.charCodeAt(3) - 61;
+  if (/^Digit[0-9]$/.test(id)) return id === "Digit0" ? 39 : +id[5] + 29;
+  if (/^F([1-9]|1[0-2])$/.test(id)) return +id.slice(1) + 57;
+  if (/^Numpad[1-9]$/.test(id)) return +id[6] + 88;
+  return HID_BY_KEY[id] ?? 0;
+}
 
-export const BUSHIDO_DEFAULT_MATRIX_CODES = [41,53,43,57,100,225,58,30,20,4,29,224,59,31,26,22,27,227,60,32,8,7,6,226,61,33,21,9,25,44,62,34,23,10,5,0,63,35,28,11,17,0,64,36,24,13,16,0,65,37,12,14,54,0,66,38,18,15,55,0,67,39,19,51,56,230,68,45,47,52,229,0,69,46,48,40,82,101,70,42,49,0,79,228,71,73,76,75,0,80,72,74,77,78,0,81];
-export const SLOT_BY_HID = new Map<number, number>();
-BUSHIDO_DEFAULT_MATRIX_CODES.forEach((hid, slot) => { if (hid !== 0 && !SLOT_BY_HID.has(hid)) SLOT_BY_HID.set(hid, slot); });
-export const FN_SLOT = 71;
-export const HID_OPTIONS = ROWS.flat().filter((x) => !x.special && x.hid > 0).map((x) => ({ label: x.id.replace(/^Key/, ""), hid: x.hid }));
+const KEYS_BY_STYLE = new Map<string, readonly KeyDef[]>();
+
+/** Build keys once per style from vendor coordinates and matrix identities. */
+export function getKeyboardKeys(styleName: string | null): readonly KeyDef[] {
+  if (styleName === null) return [];
+  const cached = KEYS_BY_STYLE.get(styleName);
+  if (cached) return cached;
+  const layout = getLayout(styleName);
+  if (!layout) return [];
+  const keys = layout.keys.map((key) => ({
+    ...key,
+    id: key.keyMapping,
+    label: LABELS[key.keyMapping] ?? key.keyMapping.replace(/^(Key|Digit|Numpad)/, ""),
+    hid: keyHid(key.keyMapping),
+    slot: layout.slotMapping[key.keyMapping],
+  }));
+  KEYS_BY_STYLE.set(styleName, keys);
+  return keys;
+}
+
+/** Provide assignable physical keys for the selected layout, without duplicate usages. */
+export function getHidOptions(keys: readonly KeyDef[]): { label: string; hid: number }[] {
+  const options = new Map<number, { label: string; hid: number }>();
+  for (const key of keys) {
+    if (key.hid > 0 && !options.has(key.hid)) {
+      options.set(key.hid, { label: key.id.replace(/^Key/, ""), hid: key.hid });
+    }
+  }
+  return [...options.values()];
+}

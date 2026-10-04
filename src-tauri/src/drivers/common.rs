@@ -1,4 +1,5 @@
 use crate::models::*;
+use super::transport::HidTransport;
 use hidapi::{HidApi, HidDevice};
 use std::{collections::BTreeSet, thread, time::Duration};
 use thiserror::Error;
@@ -35,13 +36,13 @@ pub enum ProtocolError {
 
 pub type Result<T> = std::result::Result<T, ProtocolError>;
 
-pub struct Keyboard {
-    device: HidDevice,
+pub struct Keyboard<T: HidTransport = HidDevice> {
+    pub(super) device: T,
     pub product_name: String,
     pub serial_number: Option<String>,
 }
 
-impl Keyboard {
+impl Keyboard<HidDevice> {
     pub fn open() -> Result<Self> {
         let api = HidApi::new()?;
         let info = api
@@ -63,6 +64,9 @@ impl Keyboard {
         Ok(Self { device, product_name, serial_number })
     }
 
+}
+
+impl<T: HidTransport> Keyboard<T> {
     fn validate_profile(profile: u8) -> Result<()> {
         if profile < PROFILE_COUNT { Ok(()) } else { Err(ProtocolError::BadProfile) }
     }
@@ -77,7 +81,7 @@ impl Keyboard {
 
     fn query(&self, payload: &[u8]) -> Result<Vec<u8>> {
         self.send(payload)?;
-        thread::sleep(Duration::from_millis(20));
+        self.device.delay(20);
         let mut response = vec![0u8; 512];
         response[0] = REPORT_ID;
         let len = self.device.get_feature_report(&mut response)?;

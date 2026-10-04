@@ -1,9 +1,11 @@
 {
   "name": "dark-control",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
+    "data:import": "node scripts/import-generated-data.mjs",
+    "protocol:oracle": "node scripts/vendor-protocol-oracle.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "node --test tests/*.test.mjs",

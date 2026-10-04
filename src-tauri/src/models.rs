@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceCapabilities {
     pub lighting: bool,
@@ -13,11 +13,19 @@ pub struct DeviceCapabilities {
     pub profiles: bool,
     pub max_snap_tap_pairs: u8,
     pub lighting_effects: Vec<u8>,
+    pub tft: bool,
+    pub sync: bool,
+    pub actuation: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceSummary {
+    pub id: String,
+    pub registry_id: Option<String>,
+    pub style_name: Option<String>,
+    pub known: bool,
+    pub verified: bool,
     pub connected: bool,
     pub product_name: String,
     pub serial_number: Option<String>,
@@ -29,6 +37,7 @@ pub struct DeviceSummary {
     pub profiles: u8,
     pub active_profile: u8,
     pub capabilities: DeviceCapabilities,
+    pub advertised_capabilities: DeviceCapabilities,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

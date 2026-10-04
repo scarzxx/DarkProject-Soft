@@ -30,14 +30,20 @@ jobs:
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Validate generated vendor metadata import
+        run: npm run data:import
+
       - name: Build frontend
         run: npm run build
 
-      - name: Check interface translations
+      - name: Test translations, registry, layouts and command routing
         run: npm test
 
       - name: Check Rust backend
         run: cargo check --manifest-path src-tauri/Cargo.toml
+
+      - name: Test seven protocol codecs, golden vectors, transport failures and Bushido compatibility
+        run: cargo test --manifest-path src-tauri/Cargo.toml
 
       - name: Build development EXE
         if: github.ref_type != 'tag'

@@ -1,0 +1,121 @@
+[
+  {
+    "routerId": "TFTKeyboardSeries",
+    "deviceIds": [
+      "0x05AC0x024F001",
+      "0x05AC0x024F002",
+      "0x05AC0x0250001",
+      "0x05AC0x0250002"
+    ],
+    "styles": [
+      "KD98UK",
+      "KD98US"
+    ],
+    "vendorVerification": "unverified"
+  },
+  {
+    "routerId": "DponeSeries",
+    "deviceIds": [
+      "0x1A2C0x1514001",
+      "0x1A2C0x1513001"
+    ],
+    "styles": [
+      "DPONE87ANSI",
+      "DPONE87ISO"
+    ],
+    "vendorVerification": "unverified"
+  },
+  {
+    "routerId": "CommonKeyboardSeries",
+    "deviceIds": [
+      "0x342D0xE40F001",
+      "0x342D0xE40F002",
+      "0x342D0xE40F003",
+      "0x342D0xE40F004",
+      "0x342D0xE40F005",
+      "0x342D0xE40F006",
+      "0x342D0xE40F007",
+      "0x342D0xE40F008",
+      "0x342D0xE40F009",
+      "0x342D0xE40F010",
+      "0x342D0xE40F018",
+      "0x342D0xE40F019",
+      "0x342D0xE410001",
+      "0x342D0xE410002",
+      "0x342D0xE410003",
+      "0x342D0xE410004",
+      "0x342D0xE40F011",
+      "0x342D0xE40F012",
+      "0x342D0xE40F013",
+      "0x342D0xE40F014",
+      "0x342D0xE40F015",
+      "0x342D0xE40F016",
+      "0x342D0xE40F017",
+      "0x342D0xE40F020",
+      "0x342D0xE40F021",
+      "0x342D0xE40F022",
+      "0x342D0xE40F023",
+      "0x342D0xE40F024",
+      "0x342D0xE40F025"
+    ],
+    "styles": [
+      "8440UK",
+      "8440US",
+      "GK843UK",
+      "GK843US",
+      "GK843WIRELESSUS"
+    ],
+    "vendorVerification": "verified-on-bushido-only"
+  },
+  {
+    "routerId": "WitmodSeries",
+    "deviceIds": [
+      "0x04160xC345001",
+      "0x04160xC345002",
+      "0x04160xC345003",
+      "0x04160xC345004",
+      "0x04160xC345005",
+      "0x04160xC345006"
+    ],
+    "styles": [
+      "WITMOD68US",
+      "WITMOD69UK",
+      "WITMOD83UK",
+      "WITMOD83US",
+      "WITMOD87UK",
+      "WITMOD87US"
+    ],
+    "vendorVerification": "unverified"
+  },
+  {
+    "routerId": "SparkLinkSeries",
+    "deviceIds": [
+      "0x1CA40x0101001"
+    ],
+    "styles": [
+      "GK841US"
+    ],
+    "vendorVerification": "unverified"
+  },
+  {
+    "routerId": "HFDKBSeries",
+    "deviceIds": [
+      "0x0C450x800A001"
+    ],
+    "styles": [
+      "WITMOD68US"
+    ],
+    "vendorVerification": "unverified"
+  },
+  {
+    "routerId": "HFDKBRGBSeries",
+    "deviceIds": [
+      "0xFEFE0x003D001",
+      "0x0C450x8006001"
+    ],
+    "styles": [
+      "HFD81US"
+    ],
+    "vendorVerification": "unverified"
+  }
+]

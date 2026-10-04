@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "source": "DarkProject-generated-data-v1.zip",
+  "files": {
+    "devices.generated.json": "fd6750d702f8088d58becc415cc4bab845551ee254d0590e2bea01357cae579d",
+    "layouts.generated.json": "c9019779aaa611de15c663e756776e6a562e42dee35d140162f8778c09d374cb",
+    "protocols.generated.json": "d0f639d1ee38c5c9ee39d2b0ed9354c3c6395bde925b4cc8bb34ce1070af880c",
+    "defaults.generated.json": "6ef4d061210c3955988710c46dad2b38f4510896d4b462375870317718e6b878"
+  },
+  "sourceSha256": "92e38419a4f30f24fb09dbd9dc5da91f2ed637682dc48a65ef2689448d405b46",
+  "runtimeSha256": "af5b531186c3c6726600b8fd4efa41482d7f4304a644bda3b3afcdd5488af44e",
+  "deviceCount": 45,
+  "layoutCount": 17,
+  "protocolCount": 7
+}

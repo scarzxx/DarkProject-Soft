@@ -33,24 +33,27 @@
 - [ ] custom / per-key RGB
 - [ ] live keyboard preview
 
-## 0.4 — Profiles
+## 0.4 — Vendor layouts and multi-device architecture
 
-- [ ] `.dp` import
-- [ ] `.dp` export
-- [ ] clone profile
-- [ ] local profile names
-- [ ] restore last known-good configuration
+- [x] 45-model device registry extracted from vendor technical metadata
+- [x] 17 exact percentage/keyMapping layout registries
+- [x] Exact canvas dimensions, including inherited vendor stylesheet defaults
+- [x] Dynamic StyleName renderer and capability-based navigation
+- [x] Selected-device command routing and identity verification
+- [x] Common driver split with preserved Bushido HID codec
+- [x] Seven family codecs with model-based selection and verification gates
+- [x] Mock HID transport and 1,059 external vendor golden vectors
+- [x] Regression tests for slots, layouts, identity and command routing
+- [ ] Physical Bushido regression test after this refactor
 
-## 0.5 — Multi-device
+## Next — Hardware verification and remaining editors
 
-- [ ] capability-based device registry
-- [ ] Bushido ISO
-- [ ] Violet family
-- [ ] Onionite family
-- [ ] Celestial family
-- [ ] Midnight / Daylight
-- [ ] Delta / Fuji
-- [ ] community diagnostic export for unknown devices
+- [ ] Verify additional Common models separately, including ISO/UA/wireless
+- [ ] Hardware verification and remaining unsupported Dpone, Witmod, TFT, SparkLink and HFD operations
+- [ ] Full custom/per-key RGB editor
+- [ ] Profile cloning and local names
+- [ ] Restore last known-good configuration
+- [ ] Community diagnostic export for unknown devices
 
 ## Later
 

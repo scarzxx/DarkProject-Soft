@@ -17,6 +17,21 @@ Firmware seen  v27
 
 Research capture confirmed successful HID connection, profile reads and vendor profile export for this device.
 
+## Registry coverage in v0.4
+
+The registry contains 45 vendor models and 17 referenced layout styles across
+CommonKeyboardSeries, DponeSeries, WitmodSeries, TFTKeyboardSeries, SparkLinkSeries,
+HFDKBSeries and HFDKBRGBSeries. See [registry metadata](../registry/README.md).
+
+Only Bushido ANSI remains verified. Bushido ISO/UA and every other model remain
+unverified. Known models can show their vendor layout and advertised features;
+unknown or ambiguous identities have no layout fallback. HID reads/writes are
+disabled for both categories. Native selection is limited to detected devices;
+browser previews offer all registry models.
+
+This refactor was checked with unit tests, production builds and browser previews.
+It does not establish new physical hardware verification.
+
 ## Same protocol family — candidates
 
 The vendor configurator routes multiple 87-key models through `CommonKeyboardSeries`. They are **candidates**, not automatically marked supported until tested on real hardware.

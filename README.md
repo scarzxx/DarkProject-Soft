@@ -1,6 +1,6 @@
 # Dark Control
 
-Modern desktop configurator for supported **Dark Project** keyboards.
+Modern desktop configurator for supported **Dark Project** keyboards. Version **0.4.0**.
 
 > Independent community project. Not affiliated with or endorsed by Dark Project.
 
@@ -10,20 +10,37 @@ Modern desktop configurator for supported **Dark Project** keyboards.
 
 ## Implemented
 
-- native Bushido HID discovery/readback
-- 3 hardware profiles
+- shared device registry: 45 vendor models, seven protocol families
+- 17 vendor layouts rendered dynamically by `StyleName`, including ANSI/ISO
+- native device selection with model verification before every HID operation
+- unchanged Bushido ANSI/Common HID driver and three hardware profiles
+- seven protocol-family codecs, injected HID transport and vendor golden byte vectors
 - verified RGB effects, color, brightness, speed and direction
-- polling rate, input latency, debounce and sleep timer
 - Base/FN key remapping primitives
 - Snap Tap (up to 20 pairs)
 - keyboard macro event writer/editor
 - `.dp` import/export editor
-- interactive Bushido 87 ANSI keyboard UI
+- capability-based pages; unverified models expose layout previews only
 - browser preview mode when Tauri/HID is unavailable
+- searchable keyboard picker with layout and verification information
+- all four normalized vendor JSON tables imported from the supplied data ZIP
+
+Rebuild application metadata from the preserved generated tables:
+
+```bash
+npm run data:import
+```
+
+Vendor defaults supply browser preview profiles only; native reads use HID.
 
 ## Bushido
 
 `DPKB_BUSHIDO_87_ANSI` · VID `342D` · PID `E40F` · Feature Report `7` · `CommonKeyboardSeries`
+
+Bushido ANSI is the only verified model. Shared VID/PID alone never enables its
+driver for other keyboards. TFT, synchronization and actuation remain unavailable
+even when advertised by vendor metadata. Performance primitives remain in the
+Common driver, but the vendor flag is false and the UI hides that page.
 
 ## Run
 
@@ -40,10 +57,11 @@ npm run tauri:build
 
 Windows CI checks the frontend and Rust backend on every push.
 
-Interface translation checks (Node.js 22.18 or newer):
+Translation, registry, layout and command-routing tests (Node.js 22.18 or newer):
 
 ```bash
 npm test
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
 ## Build a Windows EXE
@@ -74,7 +92,10 @@ it runs. To create an installer instead, use `npm run tauri:build`.
 
 ## Safety
 
-Firmware flashing / bootloader commands are intentionally **not implemented**. Hardware writes are limited to configuration operations derived from observed device traffic and exported profiles. Test new device models before enabling writes.
+Firmware flashing, bootloader and factory reset commands are intentionally **not implemented**.
+The six additional family codecs remain hardware **unverified**, with uncertain
+operations explicitly unsupported. See [protocol coverage, limits and golden tests](docs/PROTOCOLS.md).
+Test new models physically before enabling their production transport.
 
 ## Docs
 
@@ -83,5 +104,6 @@ Firmware flashing / bootloader commands are intentionally **not implemented**. H
 - [Protocol](docs/PROTOCOL.md)
 - [`.dp` format](docs/PROFILE_FORMAT.md)
 - [Devices](docs/DEVICES.md)
+- [Registry extraction and provenance](registry/README.md)
 - [Research](docs/RESEARCH.md)
 - [Roadmap](docs/ROADMAP.md)

@@ -1,0 +1,309 @@
+{
+  "meta": {
+    "generatedFromRuntimeSha256": "af5b531186c3c6726600b8fd4efa41482d7f4304a644bda3b3afcdd5488af44e",
+    "protocolFamilyCount": 7
+  },
+  "protocols": {
+    "TFTKeyboardSeries": {
+      "deviceCount": 4,
+      "deviceIds": [
+        "KD98A_Sunset",
+        "KD98A",
+        "KD98A2_Sunset",
+        "KD98A2"
+      ],
+      "styles": [
+        "KD98UK",
+        "KD98US"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x05AC",
+          "productId": "0x024F"
+        },
+        {
+          "vendorId": "0x05AC",
+          "productId": "0x0250"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff13",
+          "usage": "0x01",
+          "StateType": "USB"
+        },
+        {
+          "usagepage": "0xff68",
+          "usage": "0x61",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "DponeSeries": {
+      "deviceCount": 2,
+      "deviceIds": [
+        "DPONE87ANSI",
+        "DPONE87ISO"
+      ],
+      "styles": [
+        "DPONE87ANSI",
+        "DPONE87ISO"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x1A2C",
+          "productId": "0x1513"
+        },
+        {
+          "vendorId": "0x1A2C",
+          "productId": "0x1514"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff00",
+          "usage": "0x02",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "CommonKeyboardSeries": {
+      "deviceCount": 29,
+      "deviceIds": [
+        "DPKB_VIOLET_87_ANSI_UA",
+        "DPKB_VIOLET_87_ANSI",
+        "DPKB_VIOLET_87_ISO",
+        "DPKB_MIDNIGHT_87_ANSI_UA",
+        "DPKB_MIDNIGHT_87_ANSI",
+        "DPKB_MIDNIGHT_87_ISO",
+        "DPKB_DAYNIGHT_87_ANSI_UA",
+        "DPKB_DAYNIGHT_87_ANSI",
+        "DPKB_DAYNIGHT_87_ISO",
+        "DPKB_ONIONITE_87_ANSI",
+        "DPKB_ONIONITE_87_ANSI.",
+        "DPKB_ONIONITE_87._ANSI",
+        "DPKB_ONIONITE_87_ANSI_WL",
+        "DPKB_ONIONITE_87._ANSI_WL",
+        "DPKB_ONIONITE_87_ANSI_WL..",
+        "DPKB_ONIONITE_87_ANSI_BL_WL",
+        "DPKB_BUSHIDO_87_ANSI_UA",
+        "DPKB_BUSHIDO_87_ANSI",
+        "DPKB_BUSHIDO_87_ISO",
+        "DPKB_CELESTIAL_87_ANSI_UA",
+        "DPKB_CELESTIAL_87_ANSI",
+        "DPKB_CELESTIAL_87_ISO",
+        "DPKB_DELTA_87_ANSI",
+        "DPKB_DELTA_87._ANSI",
+        "DPKB_FUJI_87_ANSI",
+        "DPKB_FUJI_87_ANSI_UA",
+        "DPKB_FUJI_87_ISO",
+        "DPKB_FUJI_87_ISO_FR",
+        "DPKB_ONIONITE_87_ANSI_BL"
+      ],
+      "styles": [
+        "8440UK",
+        "8440US",
+        "GK843UK",
+        "GK843US",
+        "GK843WIRELESSUS"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x342D",
+          "productId": "0xE40F"
+        },
+        {
+          "vendorId": "0x342D",
+          "productId": "0xE410"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff01",
+          "usage": "0x01",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "verified-on-bushido-only",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "WitmodSeries": {
+      "deviceCount": 6,
+      "deviceIds": [
+        "DPP87_GSH_INK_ANSI_EN",
+        "DPP87_GSH_INK_ISO_DE",
+        "DPP83_GSH_NAVY_ANSI_EN",
+        "DPP83_GSH_NAVY_ISO_DE",
+        "GK8151UKDPRGB",
+        "GK8150SKRGB"
+      ],
+      "styles": [
+        "WITMOD68US",
+        "WITMOD69UK",
+        "WITMOD83UK",
+        "WITMOD83US",
+        "WITMOD87UK",
+        "WITMOD87US"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x0416",
+          "productId": "0xC345"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff1b",
+          "usage": "0x91",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "SparkLinkSeries": {
+      "deviceCount": 1,
+      "deviceIds": [
+        "GAMMA87_ANSI"
+      ],
+      "styles": [
+        "GK841US"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x1CA4",
+          "productId": "0x0101"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xffa0",
+          "usage": "0x01",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": true,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "HFDKBSeries": {
+      "deviceCount": 1,
+      "deviceIds": [
+        "ALU85A"
+      ],
+      "styles": [
+        "WITMOD68US"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x0C45",
+          "productId": "0x800A"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff68",
+          "usage": "0x61",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    },
+    "HFDKBRGBSeries": {
+      "deviceCount": 2,
+      "deviceIds": [
+        "TerraNostra",
+        "TerraNova"
+      ],
+      "styles": [
+        "HFD81US"
+      ],
+      "vidPidPairs": [
+        {
+          "vendorId": "0x0C45",
+          "productId": "0x8006"
+        },
+        {
+          "vendorId": "0xFEFE",
+          "productId": "0x003D"
+        }
+      ],
+      "usageSet": [
+        {
+          "usagepage": "0xff68",
+          "usage": "0x61",
+          "StateType": "USB"
+        }
+      ],
+      "capabilityUnion": {
+        "lighting": true,
+        "performance": false,
+        "snapTap": true,
+        "tft": true,
+        "sync": true,
+        "actuation": false,
+        "advancedKey": false
+      },
+      "hardwareVerification": "unverified",
+      "note": "Protocol family identity comes from vendor runtime registry. Packet encode/decode implementation is not represented by this JSON."
+    }
+  }
+}

@@ -18,10 +18,11 @@ import {
   Zap,
 } from "lucide-react";
 import ColorPicker from "./components/ColorPicker";
+import DevicePicker, { deviceLabel } from "./components/DevicePicker";
 import KeyboardView from "./components/KeyboardView";
 import { Panel, Slider, Toggle } from "./components/Ui";
 import { EFFECTS, EFFECT_NAME } from "./data/effects";
-import { FN_SLOT, HID_OPTIONS, ROWS, SLOT_BY_HID, type KeyDef } from "./data/keyboard";
+import { getKeyboardKeys, getHidOptions, keyHid as physicalKeyHid, type KeyDef } from "./data/keyboard";
 import * as api from "./lib/api";
 import { useLanguage } from "./lib/i18n";
 import { translateError } from "./lib/messages";
@@ -44,9 +45,8 @@ const parseHex = (s: string): [number, number, number] | null => {
   const m = /^#?([0-9a-f]{6})$/i.exec(s.trim());
   return m ? [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)] : null;
 };
-const keyName = (hid: number) => ROWS.flat().find((k) => k.hid === hid)?.id ?? `HID_${hid}`;
 const keyHid = (name: unknown, fallback: number) => typeof name === "string"
-  ? (ROWS.flat().find((k) => k.id === name)?.hid ?? fallback)
+  ? (physicalKeyHid(name) || fallback)
   : (typeof name === "number" ? name : fallback);
 
 function PageTitle({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) {
@@ -64,6 +64,7 @@ export default function App() {
   const { language, t } = useLanguage();
   const [page, setPage] = useState<Page>("device");
   const [device, setDevice] = useState<DeviceSummary | null>(null);
+  const [devices, setDevices] = useState<DeviceSummary[]>([]);
   const [profile, setProfile] = useState(0);
   const [state, setState] = useState<ProfileState | null>(null);
   const [lighting, setLighting] = useState<LightingSettings>(DEF_LIGHT);
@@ -80,8 +81,20 @@ export default function App() {
   const [status, setStatus] = useState<StatusMessage>({ key: "Starting…" });
   const [hexValue, setHexValue] = useState(hex(DEF_LIGHT.color));
   const fileRef = useRef<HTMLInputElement>(null);
+  const operationPending = useRef(false);
+  const keys = useMemo(() => getKeyboardKeys(device?.styleName ?? null), [device?.styleName]);
+  const hidOptions = useMemo(() => getHidOptions(keys), [keys]);
+  const namesByHid = useMemo(() => new Map(keys.filter((key) => key.hid > 0).map((key) => [key.hid, key.id])), [keys]);
+  const keyName = (hid: number) => namesByHid.get(hid) ?? `HID_${hid}`;
+  const deviceName = device?.productName === "Unknown keyboard" ? t("Unknown keyboard")
+    : device ? deviceLabel(device) : t("Dark Project keyboard");
+  const firmwareName = device?.firmware === "preview" ? t("Preview")
+    : device?.firmware === "unknown" ? t("Unknown") : device?.firmware ?? "—";
+  const canWrite = !!device?.verified && state !== null && !busy;
 
   const run = async (label: Exclude<StatusMessage, { error: string }>, fn: () => Promise<void>) => {
+    if (operationPending.current) return;
+    operationPending.current = true;
     setBusy(label);
     setStatus(label);
     try {
@@ -91,6 +104,7 @@ export default function App() {
       console.error(e);
       setStatus({ error: e instanceof Error ? e.message : String(e) });
     } finally {
+      operationPending.current = false;
       setBusy(null);
     }
   };
@@ -108,27 +122,34 @@ export default function App() {
   };
 
   const readBack = async (p = profile) => {
-    const s = await api.readProfile(p);
+    const s = await api.readProfile(p, device?.id);
     hydrate(s);
   };
 
-  const loadDevice = () => run({ key: "Reading keyboard" }, async () => {
-    const d = await api.scanDevice();
+  const loadDevice = (requestedId = device?.id) => run({ key: "Reading keyboard" }, async () => {
+    setState(null);
+    setDevice(null);
+    setSelectedKey(null);
+    setLayer(1);
+    setLighting(DEF_LIGHT);
+    setHexValue(hex(DEF_LIGHT.color));
+    setSnapPairs([]);
+    setMacros([]);
+    setActiveMacro(null);
+    const found = await api.listDevices();
+    setDevices(found);
+    const d = await api.scanDevice(requestedId);
     const p = Math.max(0, Math.min(d.profiles - 1, d.activeProfile ?? 0));
-    const s = await api.readProfile(p);
     setDevice(d);
     setProfile(p);
-    hydrate(s);
+    if (d.verified) hydrate(await api.readProfile(p, d.id));
+    else setPage("device");
   });
 
   useEffect(() => { void loadDevice(); }, []);
 
-  useEffect(() => {
-    if (page === "performance" && device && !device.capabilities.performance) setPage("device");
-  }, [device, page]);
-
   const changeProfile = (p: number) => run({ key: "Switching to Profile {number}", parameters: { number: p + 1 } }, async () => {
-    await api.switchProfile(p);
+    await api.switchProfile(p, device?.id);
     await delay(90);
     setProfile(p);
     setSelectedKey(null);
@@ -138,19 +159,23 @@ export default function App() {
   const caps = device?.capabilities;
   const nav = useMemo(() => {
     const items: Array<{ id: Page; label: MessageKey; icon: typeof Cpu }> = [{ id: "device", label: "Device", icon: Cpu }];
-    if (!caps || caps.lighting) items.push({ id: "lighting", label: "Lighting", icon: Lightbulb });
-    if (!caps || caps.keybindings) items.push({ id: "keybinds", label: "Keybindings", icon: KeyboardIcon });
-    if (!caps || caps.snapTap) items.push({ id: "snaptap", label: "Snap Tap", icon: Zap });
-    if (!caps || caps.macros) items.push({ id: "macros", label: "Macros", icon: Play });
+    if (caps?.lighting) items.push({ id: "lighting", label: "Lighting", icon: Lightbulb });
+    if (caps?.keybindings) items.push({ id: "keybinds", label: "Keybindings", icon: KeyboardIcon });
+    if (caps?.snapTap) items.push({ id: "snaptap", label: "Snap Tap", icon: Zap });
+    if (caps?.macros) items.push({ id: "macros", label: "Macros", icon: Play });
     if (caps?.performance) items.push({ id: "performance", label: "Performance", icon: Gauge });
-    if (!caps || caps.profiles) items.push({ id: "profiles", label: "Profiles", icon: Layers3 });
+    if (caps?.profiles) items.push({ id: "profiles", label: "Profiles", icon: Layers3 });
     items.push({ id: "settings", label: "Settings", icon: Settings });
     return items;
   }, [caps]);
 
+  useEffect(() => {
+    if (!nav.some((item) => item.id === page)) setPage("device");
+  }, [nav, page]);
+
   const snapSet = useMemo(() => new Set(snapPairs.flatMap((x) => [x.key1, x.key2])), [snapPairs]);
   const layerBindings = layer === 1 ? state?.keyBindings : state?.fnKeyBindings;
-  const slot = selectedKey ? (selectedKey.special ? FN_SLOT : SLOT_BY_HID.get(selectedKey.hid)) : undefined;
+  const slot = selectedKey?.slot;
   const binding = slot === undefined ? undefined : layerBindings?.find((x) => x.slot === slot);
 
   useEffect(() => {
@@ -160,22 +185,22 @@ export default function App() {
   }, [selectedKey?.id, layer, binding?.kind, binding?.code]);
 
   const effectMeta = EFFECTS.find((e) => e.id === lighting.effect) ?? EFFECTS.find((e) => e.id === 8)!;
-  const visibleEffects = EFFECTS.filter((e) => e.id === 20 || !caps || caps.lightingEffects.includes(e.id));
+  const visibleEffects = EFFECTS.filter((e) => e.id === 20 || caps?.lightingEffects.includes(e.id));
 
   const applyLight = () => run({ key: "Applying lighting" }, async () => {
-    await api.applyLighting(profile, lighting);
+    await api.applyLighting(profile, lighting, device?.id);
     await delay(90);
     await readBack();
   });
 
   const applyPerf = () => run({ key: "Applying performance" }, async () => {
-    await api.applyPerformance(profile, performance);
+    await api.applyPerformance(profile, performance, device?.id);
     await delay(90);
     await readBack();
   });
 
   const applySnap = () => run({ key: "Applying Snap Tap" }, async () => {
-    await api.applySnapTap(profile, snapEnabled, snapPairs);
+    await api.applySnapTap(profile, snapEnabled, snapPairs, device?.id);
     await delay(90);
     await readBack();
   });
@@ -187,7 +212,7 @@ export default function App() {
     }
     return run({ key: "Applying key binding" }, async () => {
       const patch = { slot, kind: mappingKind, code: mappingKind === 0 ? 0 : mappingCode };
-      await api.applyKeyBinding(profile, layer, patch);
+      await api.applyKeyBinding(profile, layer, patch, device?.id);
       await delay(90);
       await readBack();
     });
@@ -208,14 +233,14 @@ export default function App() {
   const saveMacro = () => {
     if (!active) return;
     void run({ key: "Writing Macro {id}", parameters: { id: active.id } }, async () => {
-      await api.writeMacro(active.id, active.events);
+      await api.writeMacro(active.id, active.events, device?.id);
     });
   };
 
   const exportDp = () => {
     const payload = {
       filename: "Profile",
-      SN: device?.serialNumber ?? "0x342D0xE40F012",
+      SN: device?.registryId ?? device?.serialNumber ?? "",
       value: {
         verify: "Darkproject",
         version: "1.0.1.0",
@@ -288,8 +313,9 @@ export default function App() {
     }
   };
 
-  const devicePanel = <Panel title="Bushido 87 ANSI" icon={KeyboardIcon} className="keyboard-card">
+  const devicePanel = <Panel title={deviceName} icon={KeyboardIcon} className="keyboard-card">
     <KeyboardView
+      styleName={device?.styleName ?? null}
       color={lighting.color}
       selected={selectedKey?.id}
       onSelect={page === "keybinds" ? setSelectedKey : undefined}
@@ -299,39 +325,44 @@ export default function App() {
   </Panel>;
 
   const renderDevice = () => <>
-    <PageTitle title={t("Device")} subtitle={t("Live hardware state read directly from the keyboard.")} action={<button className="primary-btn" onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
+    <PageTitle title={t("Device")} subtitle={t(device?.connected && device.verified ? "Live hardware state read directly from the keyboard." : "Device identity and vendor layout metadata.")} action={<button className="primary-btn" disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
+    {device && !device.verified && <div className="notice verification-notice"><Info size={18}/><span>{t(device.known ? "Unverified model: layout preview only. HID commands are disabled." : "Unknown model: no matching layout or verified driver. HID commands are disabled.")}</span></div>}
     <div className="device-page-grid">
       {devicePanel}
-      <Panel title={device?.productName ?? t("Dark Project keyboard")} icon={Cpu} className="device-card page-device-card">
-        <div className="device-art"><div/><span>87</span></div>
+      <Panel title={deviceName} icon={Cpu} className="device-card page-device-card">
+        <div className="device-art"><div/><span>{keys.length || "?"}</span></div>
         <dl>
           <div><dt>{t("Connection")}</dt><dd>{device?.connected ? t("USB · Connected") : t("Not connected")}</dd></div>
-          <div><dt>{t("Firmware")}</dt><dd>{device?.firmware === "preview" ? t("Preview") : device?.firmware ?? "—"}</dd></div>
-          <div><dt>{t("Active profile")}</dt><dd>{t("Profile {number}", { number: profile + 1 })}</dd></div>
+          <div><dt>{t("Firmware")}</dt><dd>{firmwareName}</dd></div>
+          <div><dt>{t("Active profile")}</dt><dd>{device?.verified ? t("Profile {number}", { number: profile + 1 }) : "—"}</dd></div>
           <div><dt>{t("Serial")}</dt><dd>{device?.serialNumber ?? "—"}</dd></div>
-          <div><dt>{t("Layout")}</dt><dd>{device?.layout ?? "—"}</dd></div>
-          <div><dt>{t("Series")}</dt><dd>{device?.protocol ?? "—"}</dd></div>
+          <div><dt>{t("Layout")}</dt><dd>{device?.layout === "Unknown" ? t("Unknown") : device?.layout ?? "—"}</dd></div>
+          <div><dt>{t("Series")}</dt><dd>{device?.protocol === "Unknown" ? t("Unknown") : device?.protocol ?? "—"}</dd></div>
+          <div><dt>{t("Layout style")}</dt><dd>{device?.styleName ?? "—"}</dd></div>
+          <div><dt>{t("Verification")}</dt><dd>{t(device?.verified ? "Verified" : "Unverified")}</dd></div>
         </dl>
         <div className="capabilities">
-          {caps && ([
-            ["Lighting", caps.lighting], ["Keybindings", caps.keybindings],
-            ["FN layer", caps.fnLayer], ["Snap Tap", caps.snapTap],
-            ["Macros", caps.macros], ["Performance", caps.performance],
-          ] as const).map(([name, enabled]) =>
-            <span className={enabled ? "supported" : "unsupported"} key={name}>{t(name)}<b>{enabled ? t("Supported") : t("Not exposed")}</b></span>)}
+          {device && ([
+            ["Lighting", "lighting"], ["Keybindings", "keybindings"],
+            ["FN layer", "fnLayer"], ["Snap Tap", "snapTap"],
+            ["Macros", "macros"], ["Performance", "performance"],
+            ["Profiles", "profiles"], ["TFT display", "tft"],
+            ["Synchronization", "sync"], ["Actuation", "actuation"],
+          ] as const).filter(([, capability]) => device.advertisedCapabilities[capability]).map(([name, capability]) =>
+            <span className={caps?.[capability] ? "supported" : "unsupported"} key={capability}>{t(name)}<b>{t(caps?.[capability] ? "Supported" : "Unverified")}</b></span>)}
         </div>
       </Panel>
     </div>
   </>;
 
   const renderLighting = () => <>
-    <PageTitle title={t("Lighting")} subtitle={`${t("Profile {number}", { number: profile + 1 })} · ${t(effectMeta.name)} · ${hex(lighting.color)}`} action={<button className="primary-btn" onClick={applyLight} disabled={!!busy}><Save size={16}/> {t("Apply to keyboard")}</button>} />
+    <PageTitle title={t("Lighting")} subtitle={`${t("Profile {number}", { number: profile + 1 })} · ${t(effectMeta.name)} · ${hex(lighting.color)}`} action={<button className="primary-btn" onClick={applyLight} disabled={!canWrite}><Save size={16}/> {t("Apply to keyboard")}</button>} />
     {devicePanel}
     <div className="lighting-page-grid">
       <Panel title={t("Color & effect settings")} icon={Lightbulb} className="lighting-editor-card">
         <div className="lighting-editor">
           <div className="picker-column">
-            {effectMeta.color ? <ColorPicker color={lighting.color} onChange={(c) => { setLighting({ ...lighting, color: c }); setHexValue(hex(c)); }} /> : <div className="no-color"><Sparkles size={30}/><b>{t("This effect controls its colors automatically")}</b><span>{t("No color picker is exposed by the Bushido profile.")}</span></div>}
+            {effectMeta.color ? <ColorPicker color={lighting.color} onChange={(c) => { setLighting({ ...lighting, color: c }); setHexValue(hex(c)); }} /> : <div className="no-color"><Sparkles size={30}/><b>{t("This effect controls its colors automatically")}</b><span>{t("This device does not expose a color picker for this effect.")}</span></div>}
             {effectMeta.color && <div className="hex-field large"><i style={{ background: `rgb(${lighting.color.join(",")})` }}/><input aria-label={t("Hex color")} value={hexValue} onChange={(e) => setHexValue(e.target.value)} onBlur={() => { const c = parseHex(hexValue); if (c) { setLighting({ ...lighting, color: c }); setHexValue(hex(c)); } else setHexValue(hex(lighting.color)); }}/></div>}
           </div>
           <div className="lighting-controls large-controls">
@@ -339,11 +370,11 @@ export default function App() {
             <Slider label={t("Brightness")} value={lighting.brightness} onChange={(v) => setLighting({ ...lighting, brightness: v })}/>
             {effectMeta.rate && <Slider label={t("Speed")} value={lighting.speed} onChange={(v) => setLighting({ ...lighting, speed: v })}/>}
             {effectMeta.direction && <div className="directions"><b>{t("Direction")}</b>{(["Right", "Up", "Left", "Down"] as const).slice(0, lighting.effect === 1 ? 2 : 4).map((direction, i) => <button key={direction} aria-label={t(direction)} aria-pressed={lighting.direction === i} className={lighting.direction === i ? "active" : ""} onClick={() => setLighting({ ...lighting, direction: i })}>{["→", "↑", "←", "↓"][i]}</button>)}</div>}
-            {effectMeta.custom && <div className="notice"><Info size={16}/><span>{t("Custom/per-key RGB exists on Bushido. This build preserves the currently selected hardware custom preset; the full per-key painter is the next isolated editor.")}</span></div>}
+            {effectMeta.custom && <div className="notice"><Info size={16}/><span>{t("This build preserves the selected hardware custom preset. A per-key color editor is not available yet.")}</span></div>}
           </div>
         </div>
       </Panel>
-      <Panel title={t("Effects available on Bushido")} icon={Sparkles} className="effects-card">
+      <Panel title={t("Effects available on {device}", { device: deviceName })} icon={Sparkles} className="effects-card">
         <div className="effects-grid page-effects">{visibleEffects.map((effect) => {
           const Icon = effect.icon;
           const selected = lighting.brightness === 0 ? effect.id === 20 : lighting.effect === effect.id;
@@ -357,15 +388,15 @@ export default function App() {
   </>;
 
   const renderKeybindings = () => <>
-    <PageTitle title={t("Keybindings")} subtitle={t("Select a key on the keyboard, choose Base or FN layer, then write the mapping.")} action={<div className="tabs big-tabs"><button className={layer === 1 ? "active" : ""} onClick={() => setLayer(1)}>{t("Base layer")}</button>{caps?.fnLayer !== false && <button className={layer === 2 ? "active" : ""} onClick={() => setLayer(2)}>{t("FN layer")}</button>}</div>} />
+    <PageTitle title={t("Keybindings")} subtitle={t("Select a key on the keyboard, choose Base or FN layer, then write the mapping.")} action={<div className="tabs big-tabs"><button className={layer === 1 ? "active" : ""} onClick={() => setLayer(1)}>{t("Base layer")}</button>{caps?.fnLayer && <button className={layer === 2 ? "active" : ""} onClick={() => setLayer(2)}>{t("FN layer")}</button>}</div>} />
     {devicePanel}
     <Panel title={selectedKey ? t("Edit {key}", { key: selectedKey.id }) : t("Select a key above")} icon={KeyboardIcon} className="wide-editor">
       <div className="key-editor-row">
         <div className="picked big-picked"><span>{selectedKey?.label || "?"}</span><div><b>{selectedKey?.id || t("No key selected")}</b><small>{slot === undefined ? t("Click a configurable key") : t("Firmware slot {slot} · {layer} layer", { slot, layer: layer === 1 ? t("Base") : "FN" })}</small></div></div>
         <label><span>{t("Action type")}</span><select value={mappingKind} onChange={(e) => setMappingKind(+e.target.value)}><option value={1}>{t("Keyboard key")}</option><option value={5}>{t("Macro")}</option><option value={0}>{t("Disabled")}</option></select></label>
-        {mappingKind === 1 && <label><span>{t("Mapped key")}</span><select value={mappingCode} onChange={(e) => setMappingCode(+e.target.value)}>{HID_OPTIONS.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select></label>}
+        {mappingKind === 1 && <label><span>{t("Mapped key")}</span><select value={mappingCode} onChange={(e) => setMappingCode(+e.target.value)}>{hidOptions.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select></label>}
         {mappingKind === 5 && <label><span>{t("Macro ID")}</span><select value={mappingCode} onChange={(e) => setMappingCode(+e.target.value)}>{Array.from({ length: 10 }, (_, i) => i + 1).map((id) => <option key={id} value={id}>{t("Macro")} {id}</option>)}</select></label>}
-        <button className="primary-btn" disabled={slot === undefined || !!busy} onClick={applyBinding}><Save size={16}/> {t("Apply key")}</button>
+        <button className="primary-btn" disabled={slot === undefined || !canWrite} onClick={applyBinding}><Save size={16}/> {t("Apply key")}</button>
       </div>
     </Panel>
   </>;
@@ -373,13 +404,13 @@ export default function App() {
   const renderSnapTap = () => <>
     <PageTitle title={t("Snap Tap")} subtitle={t("Hardware supports up to {count} key pairs.", { count: caps?.maxSnapTapPairs ?? 20 })} action={<div className="toggle-label"><span>{snapEnabled ? t("Enabled") : t("Disabled")}</span><Toggle value={snapEnabled} onChange={setSnapEnabled}/></div>} />
     {devicePanel}
-    <Panel title={t("Snap Tap pairs")} icon={Zap} className="wide-editor" action={<button className="primary-btn" onClick={applySnap}><Save size={16}/> {t("Apply to keyboard")}</button>}>
+    <Panel title={t("Snap Tap pairs")} icon={Zap} className="wide-editor" action={<button className="primary-btn" disabled={!canWrite} onClick={applySnap}><Save size={16}/> {t("Apply to keyboard")}</button>}>
       <div className="snap-page-list">
         {snapPairs.length === 0 && <div className="empty-state"><Zap size={28}/><b>{t("No Snap Tap pairs are stored in this profile.")}</b><span>{t("Add a pair to start.")}</span></div>}
         {snapPairs.map((p, i) => <div className="snap-row large-snap" key={i}>
-          <select value={p.key1} onChange={(e) => setPair(i, { key1: +e.target.value })}>{HID_OPTIONS.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
+          <select value={p.key1} onChange={(e) => setPair(i, { key1: +e.target.value })}>{hidOptions.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
           <span>↔</span>
-          <select value={p.key2} onChange={(e) => setPair(i, { key2: +e.target.value })}>{HID_OPTIONS.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
+          <select value={p.key2} onChange={(e) => setPair(i, { key2: +e.target.value })}>{hidOptions.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
           <select value={p.kind} onChange={(e) => setPair(i, { kind: +e.target.value })}><option value={0}>{t("Last input wins")}</option><option value={1}>{t("Key 1 priority")}</option><option value={2}>{t("Key 2 priority")}</option></select>
           <button aria-label={t("Remove pair")} onClick={() => setSnapPairs((xs) => xs.filter((_, n) => n !== i))}><Trash2 size={14}/></button>
         </div>)}
@@ -397,10 +428,10 @@ export default function App() {
           {macros.map((m) => <button key={m.id} className={m.id === activeMacro ? "active" : ""} onClick={() => setActiveMacro(m.id)}><span>{m.id}</span><div><b>{t("Macro {id}", { id: m.id })}</b><small>{t("Events: {count}", { count: m.events.length })}</small></div></button>)}
         </div>
       </Panel>
-      <Panel title={active ? t("Macro {id}", { id: active.id }) : t("Macro editor")} icon={Play} className="macro-editor-card" action={active ? <button className="primary-btn" onClick={saveMacro}><Save size={16}/> {t("Write macro")}</button> : undefined}>
+      <Panel title={active ? t("Macro {id}", { id: active.id }) : t("Macro editor")} icon={Play} className="macro-editor-card" action={active ? <button className="primary-btn" disabled={!canWrite} onClick={saveMacro}><Save size={16}/> {t("Write macro")}</button> : undefined}>
         {!active ? <div className="empty-state tall"><Play size={32}/><b>{t("Select or create a macro.")}</b></div> : <div className="macro-editor">
           {active.events.map((event, i) => <div className="macro-event big-event" key={i}>
-            <select value={event.hid} onChange={(e) => patchMacro((xs) => xs.map((x, n) => n === i ? { ...x, hid: +e.target.value } : x))}>{HID_OPTIONS.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
+            <select value={event.hid} onChange={(e) => patchMacro((xs) => xs.map((x, n) => n === i ? { ...x, hid: +e.target.value } : x))}>{hidOptions.map((o) => <option key={o.hid} value={o.hid}>{o.label}</option>)}</select>
             <label><input aria-label={t("Event delay")} type="number" min={0} max={32767} value={event.delay} onChange={(e) => patchMacro((xs) => xs.map((x, n) => n === i ? { ...x, delay: Math.max(0, Math.min(32767, +e.target.value)) } : x))}/><span>ms</span></label>
             <button className={event.pressed ? "down" : "up"} onClick={() => patchMacro((xs) => xs.map((x, n) => n === i ? { ...x, pressed: !x.pressed } : x))}>{event.pressed ? t("KEY DOWN") : t("KEY UP")}</button>
             <button aria-label={t("Remove event")} onClick={() => patchMacro((xs) => xs.filter((_, n) => n !== i))}><Trash2 size={14}/></button>
@@ -412,9 +443,9 @@ export default function App() {
   </>;
 
   const renderProfiles = () => <>
-    <PageTitle title={t("Profiles")} subtitle={t("Bushido stores three hardware profiles. The highlighted profile is the one the keyboard reported as active.")} />
+    <PageTitle title={t("Profiles")} subtitle={t("This device stores {count} hardware profiles. The highlighted profile is active on the keyboard.", { count: device?.profiles ?? 0 })} />
     <div className="profiles-page-grid">
-      {[0, 1, 2].map((p) => <button className={`profile-big ${p === profile ? "active" : ""}`} key={p} onClick={() => void changeProfile(p)}><Layers3 size={25}/><div><strong>{t("Profile {number}", { number: p + 1 })}</strong><span>{p === profile ? t("Active on keyboard") : t("Stored in hardware")}</span></div>{p === profile && <b>{t("ACTIVE")}</b>}</button>)}
+      {Array.from({ length: device?.profiles ?? 0 }, (_, p) => p).map((p) => <button className={`profile-big ${p === profile ? "active" : ""}`} key={p} disabled={!canWrite} onClick={() => void changeProfile(p)}><Layers3 size={25}/><div><strong>{t("Profile {number}", { number: p + 1 })}</strong><span>{p === profile ? t("Active on keyboard") : t("Stored in hardware")}</span></div>{p === profile && <b>{t("ACTIVE")}</b>}</button>)}
     </div>
     <Panel title={t("Import / export")} icon={Layers3} className="profile-transfer">
       <p>{t("Import edits the current profile in the app first. Nothing is written until you press Apply in the relevant page.")}</p>
@@ -423,7 +454,7 @@ export default function App() {
   </>;
 
   const renderPerformance = () => <>
-    <PageTitle title={t("Performance")} subtitle={t("Shown only for models whose vendor capability metadata exposes Performance.")} action={<button className="primary-btn" onClick={applyPerf}><Save size={16}/> {t("Apply")}</button>} />
+    <PageTitle title={t("Performance")} subtitle={t("Shown only for models whose vendor capability metadata exposes Performance.")} action={<button className="primary-btn" disabled={!canWrite} onClick={applyPerf}><Save size={16}/> {t("Apply")}</button>} />
     <Panel title={t("Performance")} icon={Gauge} className="wide-editor">
       <div className="performance-editor"><div className="seg"><b>{t("Polling Rate")}</b>{[125, 250, 500, 1000].map((v) => <button key={v} className={performance.pollingRate === v ? "active" : ""} onClick={() => setPerformance({ ...performance, pollingRate: v })}>{v}</button>)}</div><div className="seg"><b>{t("Input Latency")}</b>{[0, 2, 8, 12].map((v) => <button key={v} className={performance.inputLatency === v ? "active" : ""} onClick={() => setPerformance({ ...performance, inputLatency: v })}>{v}</button>)}</div><Slider label={t("Debounce Time")} min={0} max={20} suffix=" ms" value={performance.debounce} onChange={(v) => setPerformance({ ...performance, debounce: v })}/><Slider label={t("Sleep Timer")} min={0} max={60} suffix=" min" value={performance.sleepTime} onChange={(v) => setPerformance({ ...performance, sleepTime: v })}/></div>
     </Panel>
@@ -446,15 +477,16 @@ export default function App() {
     <aside className="sidebar">
       <div className="brand"><h1>DARK <span>CONTROL</span></h1><p>{t("for Dark Project keyboards")}</p></div>
       <nav>{nav.map((n) => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => setPage(n.id)}><n.icon size={20}/><span>{t(n.label)}</span></button>)}</nav>
-      <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.3.0</small></div>
+      <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.4.0</small></div>
     </aside>
     <main className="main">
       <header className="topbar">
-        <div className="device-mini"><div className="mini-kbd"><KeyboardIcon size={20}/></div><div><strong>{device?.productName?.replace("DPKB_", "").replaceAll("_", " ") ?? "BUSHIDO 87 ANSI"}</strong><span className={`connection ${device?.connected ? "on" : ""}`}><i/>{device?.connected ? t("Connected") : t("Waiting for device")}</span></div></div>
-        <div className="meta"><span>VID 0x{(device?.vendorId ?? 0x342d).toString(16).toUpperCase()}</span><span>PID 0x{(device?.productId ?? 0xe40f).toString(16).toUpperCase()}</span><span>{device?.firmware === "preview" ? t("Preview") : device?.firmware ?? "FW —"}</span></div>
-        <button className="icon-btn" title={t("Reload from keyboard")} onClick={() => void loadDevice()}><RefreshCw size={17} className={busy ? "spin" : ""}/></button>
+        <div className="device-mini"><div className="mini-kbd"><KeyboardIcon size={20}/></div><div><strong>{deviceName}</strong><span className={`connection ${device?.connected ? "on" : ""}`}><i/>{device?.connected ? t("Connected") : t("Waiting for device")}</span></div></div>
+        <div className="meta"><span>VID 0x{device?.vendorId.toString(16).toUpperCase() ?? "—"}</span><span>PID 0x{device?.productId.toString(16).toUpperCase() ?? "—"}</span><span>{firmwareName}</span></div>
+        <button className="icon-btn" title={t("Reload from keyboard")} disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={17} className={busy ? "spin" : ""}/></button>
         <div className="grow"/>
-        <select className="profile-select" aria-label={t("Active profile")} value={profile} onChange={(e) => void changeProfile(+e.target.value)}>{Array.from({ length: device?.profiles ?? 3 }, (_, p) => <option key={p} value={p}>{t("Profile {number}", { number: p + 1 })}</option>)}</select>
+        {devices.length > 0 && <DevicePicker devices={devices} selectedId={device?.id} disabled={!!busy} onSelect={(id) => void loadDevice(id)}/>}
+        {caps?.profiles && <select className="profile-select" disabled={!canWrite} aria-label={t("Active profile")} value={profile} onChange={(e) => void changeProfile(+e.target.value)}>{Array.from({ length: device?.profiles ?? 0 }, (_, p) => <option key={p} value={p}>{t("Profile {number}", { number: p + 1 })}</option>)}</select>}
         <input hidden ref={fileRef} type="file" accept=".dp,.json" onChange={(e) => e.target.files?.[0] && void importDp(e.target.files[0])}/>
       </header>
       <div className="workspace">{renderPage()}</div>

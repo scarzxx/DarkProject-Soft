@@ -99,7 +99,7 @@ export default function PreferencesOverlay() {
 
         <article className="preference-card app-card">
           <img src="/icon.png" alt="Dark Control"/>
-          <div className="app-copy"><strong>{"Dark Control"}</strong><span>v0.3.0</span><p>{t("Community configurator for supported Dark Project keyboards.")}</p></div>
+          <div className="app-copy"><strong>{"Dark Control"}</strong><span>v0.4.0</span><p>{t("Community configurator for supported Dark Project keyboards.")}</p></div>
           <button className="reset-preferences" onClick={reset}><RotateCcw size={15}/>{t("Reset preferences")}</button>
         </article>
       </div>
