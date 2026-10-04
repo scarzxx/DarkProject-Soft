@@ -40,6 +40,38 @@ npm run tauri:build
 
 Windows CI checks the frontend and Rust backend on every push.
 
+Interface translation checks (Node.js 22.18 or newer):
+
+```bash
+npm test
+```
+
+## Build a Windows EXE
+
+Install these tools once:
+
+- Node.js 22 with npm.
+- Rust using rustup, with the `x86_64-pc-windows-msvc` toolchain/target.
+- Visual Studio Build Tools with **Desktop development with C++** and a Windows SDK.
+
+See the [Tauri Windows prerequisites](https://v2.tauri.app/start/prerequisites/).
+After installing the tools, reopen your terminal or Explorer so PATH is updated.
+
+Double-click `build-exe.cmd`, or run it from PowerShell:
+
+```powershell
+.\build-exe.cmd
+```
+
+The script installs frontend dependencies, builds the frontend and Rust application
+in release mode, and copies the Windows x64 executable to `output\Dark Control.exe`.
+The first build requires internet access and can take several minutes. The window
+stays open to show the result or any error. For automation, use
+`build-exe.cmd --no-pause`; failures return exit code 1.
+
+The executable requires the Microsoft Edge WebView2 Runtime on the computer where
+it runs. To create an installer instead, use `npm run tauri:build`.
+
 ## Safety
 
 Firmware flashing / bootloader commands are intentionally **not implemented**. Hardware writes are limited to configuration operations derived from observed device traffic and exported profiles. Test new device models before enabling writes.

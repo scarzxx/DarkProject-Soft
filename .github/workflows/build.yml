@@ -2,31 +2,104 @@ name: build
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    tags:
+      - "v*"
   pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   windows:
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
+
       - name: Build frontend
         run: npm run build
+
+      - name: Check interface translations
+        run: npm test
+
       - name: Check Rust backend
         run: cargo check --manifest-path src-tauri/Cargo.toml
-      - name: Build Windows executable
+
+      - name: Build development EXE
+        if: github.ref_type != 'tag'
         run: npm run tauri:build -- --no-bundle
-      - name: Upload Dark Control executable
-        if: github.event_name == 'push'
+
+      - name: Upload development EXE
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: Dark-Control-Windows-x64
           path: src-tauri/target/release/dark-control.exe
           if-no-files-found: error
           retention-days: 14
+
+      - name: Build release EXE + MSI
+        if: github.ref_type == 'tag'
+        run: npm run tauri:build -- --bundles msi
+
+      - name: Prepare release files
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          New-Item -ItemType Directory -Force -Path "release" | Out-Null
+
+          $exe = "src-tauri\target\release\dark-control.exe"
+          if (-not (Test-Path $exe)) {
+            throw "Portable EXE was not produced: $exe"
+          }
+
+          $exeOut = "release\Dark-Control-$tag-Windows-x64.exe"
+          Copy-Item $exe $exeOut
+
+          $msi = Get-ChildItem "src-tauri\target\release\bundle\msi\*.msi" -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+          if ($null -eq $msi) {
+            throw "MSI installer was not produced."
+          }
+
+          $msiOut = "release\Dark-Control-$tag-Windows-x64.msi"
+          Copy-Item $msi.FullName $msiOut
+
+          $checksumLines = Get-ChildItem "release" -File |
+            Where-Object { $_.Extension -in ".exe", ".msi" } |
+            Sort-Object Name |
+            ForEach-Object {
+              $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash *$($_.Name)"
+            }
+
+          $checksumLines | Set-Content "release\SHA256SUMS.txt" -Encoding ascii
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          name: Dark Control ${{ github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            release/*.exe
+            release/*.msi
+            release/SHA256SUMS.txt

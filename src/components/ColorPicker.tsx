@@ -1,4 +1,5 @@
 import { useMemo, useRef, type CSSProperties, type PointerEvent } from "react";
+import { useLanguage } from "../lib/i18n";
 
 function rgbToHsv([r0, g0, b0]: [number, number, number]) {
   const r = r0 / 255, g = g0 / 255, b = b0 / 255;
@@ -26,6 +27,7 @@ function hsvToRgb(h: number, s: number, v: number): [number, number, number] {
 }
 
 export default function ColorPicker({ color, onChange }: { color: [number, number, number]; onChange: (c: [number, number, number]) => void }) {
+  const { t } = useLanguage();
   const plane = useRef<HTMLDivElement>(null);
   const hsv = useMemo(() => rgbToHsv(color), [color[0], color[1], color[2]]);
   const pure = hsvToRgb(hsv.h, 1, 1);
@@ -56,7 +58,7 @@ export default function ColorPicker({ color, onChange }: { color: [number, numbe
     </div>
     <input
       className="hue-range"
-      aria-label="Hue"
+      aria-label={t("Hue")}
       type="range"
       min={0}
       max={359}
