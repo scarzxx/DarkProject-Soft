@@ -13,10 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - uses: dtolnay/rust-toolchain@stable
       - name: Install frontend dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
       - name: Build frontend
         run: npm run build
       - name: Check Rust backend
