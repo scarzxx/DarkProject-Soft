@@ -41,6 +41,7 @@ The protocol notes are based on observed device traffic, exported `.dp` profiles
 - [Architecture](docs/ARCHITECTURE.md)
 - [UI design](docs/DESIGN.md)
 - [Protocol notes](docs/PROTOCOL.md)
+- [`.dp` profile format](docs/PROFILE_FORMAT.md)
 - [Devices](docs/DEVICES.md)
 - [Roadmap](docs/ROADMAP.md)
 
