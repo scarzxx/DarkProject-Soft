@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Dark Control",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "eu.darkcontrol.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -10,8 +10,27 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [{"title":"DARK CONTROL","width":1536,"height":1024,"minWidth":1280,"minHeight":800,"resizable":true,"fullscreen":false,"decorations":true,"transparent":false,"center":true}],
-    "security": {"csp": null}
+    "windows": [
+      {
+        "title": "DARK CONTROL",
+        "width": 1260,
+        "height": 820,
+        "minWidth": 1050,
+        "minHeight": 680,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "security": { "csp": null }
   },
-  "bundle": {"active":true,"targets":"all","category":"Utility","shortDescription":"Dark Project keyboard configurator","longDescription":"A community desktop configurator for supported Dark Project keyboards."}
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Utility",
+    "shortDescription": "Dark Project keyboard configurator",
+    "longDescription": "A community desktop configurator for supported Dark Project keyboards."
+  }
 }
