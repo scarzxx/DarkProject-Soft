@@ -1,5 +1,18 @@
 export type Page = "device" | "lighting" | "keybinds" | "snaptap" | "macros" | "performance" | "profiles" | "settings";
 
+export interface DeviceCapabilities {
+  lighting: boolean;
+  customLighting: boolean;
+  keybindings: boolean;
+  fnLayer: boolean;
+  snapTap: boolean;
+  macros: boolean;
+  performance: boolean;
+  profiles: boolean;
+  maxSnapTapPairs: number;
+  lightingEffects: number[];
+}
+
 export interface DeviceSummary {
   connected: boolean;
   productName: string;
@@ -10,6 +23,8 @@ export interface DeviceSummary {
   layout: "ANSI" | "ISO" | "Unknown";
   protocol: string;
   profiles: number;
+  activeProfile: number;
+  capabilities: DeviceCapabilities;
 }
 
 export interface LightingSettings {
@@ -40,6 +55,17 @@ export interface RawKeyBinding {
   kind: number;
 }
 
+export interface MacroEvent {
+  hid: number;
+  delay: number;
+  pressed: boolean;
+}
+
+export interface MacroDefinition {
+  id: number;
+  events: MacroEvent[];
+}
+
 export interface ProfileState {
   profile: number;
   lighting: LightingSettings;
@@ -47,10 +73,6 @@ export interface ProfileState {
   snapTapEnabled: boolean;
   snapTapPairs: SnapPair[];
   keyBindings: RawKeyBinding[];
-}
-
-export interface MacroEvent {
-  hid: number;
-  delay: number;
-  pressed: boolean;
+  fnKeyBindings: RawKeyBinding[];
+  macros: MacroDefinition[];
 }
