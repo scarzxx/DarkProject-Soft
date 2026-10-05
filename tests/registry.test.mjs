@@ -51,14 +51,22 @@ test("inherited canvas dimensions come from vendor CSS, not renderer guesses", (
   }
 });
 
-test("an unsupported router cannot become writable just through a verified model flag", () => {
+test("verified non-Common models use the shared safe adapter gates, not a Common hardcode", () => {
   const model = registry.DEVICE_REGISTRY.find((device) => device.routerId === "WitmodSeries");
-  const preview = registry.previewDevice({ ...model, verified: true });
-  assert.equal(registry.hasVerifiedDriver({ ...model, verified: true }), false);
-  assert.equal(registry.hasVerifiedDriver(registry.DEVICE_REGISTRY.find((device) => device.verified)), true);
-  assert.equal(preview.verified, false);
-  assert.equal(preview.capabilities.lighting, false);
-  assert.equal(preview.activeProfile, 0);
+  const pretendVerified = { ...model, verified: true };
+  const preview = registry.previewDevice(pretendVerified);
+  assert.equal(registry.DRIVER_CAPABILITIES.size, 7);
+  assert.equal(registry.hasVerifiedDriver(pretendVerified), true);
+  assert.equal(registry.supportsProfileState(pretendVerified), false);
+  assert.equal(preview.verified, true);
+  assert.equal(preview.capabilities.lighting, model.capabilities.lighting);
+  assert.equal(preview.capabilities.snapTap, model.capabilities.snapTap);
+  assert.equal(preview.capabilities.keybindings, false);
+  assert.equal(preview.capabilities.macros, false);
+  assert.equal(preview.capabilities.profiles, false);
+  const bushido = registry.DEVICE_REGISTRY.find((device) => device.verified);
+  assert.equal(registry.hasVerifiedDriver(bushido), true);
+  assert.equal(registry.supportsProfileState(bushido), true);
 });
 
 test("only Bushido ANSI exposes usable capabilities; advertised TFT/sync remain disabled", () => {
