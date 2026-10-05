@@ -118,7 +118,7 @@ export default function PreferencesOverlay() {
   const [trayReady, setTrayReady] = useState(false);
   const [trayBusy, setTrayBusy] = useState(supportsTray);
   const [trayError, setTrayError] = useState("");
-  const [appVersion, setAppVersion] = useState("0.4.0");
+  const [appVersion, setAppVersion] = useState("0.4.1");
   const [autoUpdates, setAutoUpdates] = useState(initialAutoUpdates);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>("idle");
   const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null);

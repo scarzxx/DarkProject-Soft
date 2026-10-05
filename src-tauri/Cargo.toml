@@ -1,6 +1,6 @@
 [package]
 name = "dark-control"
-version = "0.4.0"
+version = "0.4.1"
 description = "Dark Control - desktop configurator for supported Dark Project keyboards"
 authors = ["Dark Control contributors"]
 edition = "2021"

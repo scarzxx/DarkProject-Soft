@@ -38,11 +38,11 @@ export const supportsUpdater = () =>
 let inFlightCheck: Promise<Update | null> | null = null;
 
 export async function getAppVersion(): Promise<string> {
-  if (!supportsUpdater()) return "0.4.0";
+  if (!supportsUpdater()) return "0.4.1";
   try {
     return await getVersion();
   } catch {
-    return "0.4.0";
+    return "0.4.1";
   }
 }
 
