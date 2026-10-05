@@ -553,7 +553,7 @@ export default function App() {
       <aside className="sidebar">
         <div className="brand"><h1>DARK <span>CONTROL</span></h1><p>{t("for Dark Project keyboards")}</p></div>
         <nav>{nav.map((n) => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => setPage(n.id)}><n.icon size={20}/><span>{t(n.label)}</span></button>)}</nav>
-        <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.4.1</small></div>
+        <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.4.2</small></div>
       </aside>
       <main className="main">
         <header className="topbar">
