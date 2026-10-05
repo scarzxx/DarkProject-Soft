@@ -12,23 +12,24 @@ Modern desktop configurator for supported **Dark Project** keyboards. Version **
 
 - shared device registry: 45 vendor models, seven protocol families
 - 17 vendor layouts rendered dynamically by `StyleName`, including ANSI/ISO
-- native device selection with model verification before every HID operation
+- native device selection with exact VID/PID, model identity and HID interface checks
 - unchanged Bushido ANSI/Common HID driver and three hardware profiles
 - seven protocol-family codecs, injected HID transport and vendor golden byte vectors
-- verified RGB effects, color, brightness, speed and direction
-- Base/FN key remapping primitives
-- Snap Tap (up to 20 pairs)
-- keyboard macro event writer/editor
+- family-capability-gated RGB effects, color, brightness, speed and direction
+- Base/FN key remapping adapters where the family has a lossless editor mapping
+- Snap Tap where exposed by the family adapter
+- keyboard macro event writer/editor where complete-table semantics are handled safely
 - `.dp` import/export editor
-- capability-based pages; unverified models expose layout previews only
+- all 45 known registry models are supported; individual pages remain family-capability specific
 - browser preview mode when Tauri/HID is unavailable
-- searchable keyboard picker with layout and verification information
+- searchable keyboard picker with layout and support information
 - all four normalized vendor JSON tables imported from the supplied data ZIP
 - optional close to tray, immediate hide button and localized open/exit menu
+- signed in-app updater with automatic/manual checks in Settings for release builds
 
-In Settings, enable **Close to tray** to keep the app running when its window is
-closed. Click the tray icon to restore it, or use its **Exit** menu item to quit.
-The option defaults to off and persists across restarts.
+In Settings, choose language and appearance, configure **Close to tray**, and manage
+updates. Automatic update checks default to on and stay silent when no update is
+available. Release builds verify the update signature before installation.
 
 Rebuild application metadata from the preserved generated tables:
 
@@ -42,10 +43,10 @@ Vendor defaults supply browser preview profiles only; native reads use HID.
 
 `DPKB_BUSHIDO_87_ANSI` · VID `342D` · PID `E40F` · Feature Report `7` · `CommonKeyboardSeries`
 
-Bushido ANSI is the only verified model. Shared VID/PID alone never enables its
-driver for other keyboards. TFT, synchronization and actuation remain unavailable
-even when advertised by vendor metadata. Performance primitives remain in the
-Common driver, but the vendor flag is false and the UI hides that page.
+Bushido ANSI is the hardware-tested Common reference model. Shared VID/PID alone
+never enables a driver for the wrong keyboard. Other known models are still
+supported from the vendor-derived protocol registry, while operations that cannot
+be represented losslessly by the current app adapter stay hidden.
 
 ## Run
 
@@ -60,9 +61,11 @@ Build installer/app bundle:
 npm run tauri:build
 ```
 
-Windows CI checks the frontend and Rust backend on every push.
+Windows CI runs frontend and Rust checks on pull requests. A successful push to
+`main` additionally uploads a `Dark-Control-Windows-x64` workflow artifact containing
+the portable EXE, MSI installer and NSIS installer.
 
-Translation, registry, layout and command-routing tests (Node.js 22.18 or newer):
+Translation, registry, layout, updater and command-routing tests:
 
 ```bash
 npm test
@@ -95,12 +98,26 @@ stays open to show the result or any error. For automation, use
 The executable requires the Microsoft Edge WebView2 Runtime on the computer where
 it runs. To create an installer instead, use `npm run tauri:build`.
 
+## Releases and updates
+
+Release versions are synchronized with:
+
+```powershell
+npm run release:version -- 0.4.1
+npm install
+```
+
+Push the matching `v0.4.1` tag to run the signed release workflow. The workflow
+creates MSI/NSIS bundles, updater signatures and `latest.json`, then publishes the
+GitHub Release. One-time signing-key setup and the private-repository limitation are
+documented in [docs/UPDATES.md](docs/UPDATES.md).
+
 ## Safety
 
 Firmware flashing, bootloader and factory reset commands are intentionally **not implemented**.
-The six additional family codecs remain hardware **unverified**, with uncertain
-operations explicitly unsupported. See [protocol coverage, limits and golden tests](docs/PROTOCOLS.md).
-Test new models physically before enabling their production transport.
+Most non-Bushido hardware has not been physically tested by this project, so the app
+still rejects unknown/ambiguous devices and hides operations without a safe family
+adapter. Hardware-tested status is confidence metadata, not the runtime support gate.
 
 ## Docs
 
@@ -109,6 +126,7 @@ Test new models physically before enabling their production transport.
 - [Protocol](docs/PROTOCOL.md)
 - [`.dp` format](docs/PROFILE_FORMAT.md)
 - [Devices](docs/DEVICES.md)
+- [Updates and releases](docs/UPDATES.md)
 - [Registry extraction and provenance](registry/README.md)
 - [Research](docs/RESEARCH.md)
 - [Roadmap](docs/ROADMAP.md)
