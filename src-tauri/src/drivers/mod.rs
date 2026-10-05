@@ -14,7 +14,8 @@ pub mod vendor;
 mod witmod;
 
 use crate::models::{
-    LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding, SnapPair,
+    FeatureState, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding,
+    SnapPair, SnapTapState,
 };
 use crate::registry::DeviceMetadata;
 use hidapi::{DeviceInfo, HidApi};
@@ -66,7 +67,7 @@ pub fn ensure_available(metadata: Option<&DeviceMetadata>) -> Result<(), String>
     }
 }
 
-/// Common command interface for independently verified protocol drivers.
+/// Stable UI command interface. Family-native codecs stay behind this boundary.
 pub trait ProtocolDriver {
     #[allow(dead_code)]
     fn vendor_request(&self, _request: &vendor::Request) -> Result<serde_json::Value, String> {
@@ -74,6 +75,7 @@ pub trait ProtocolDriver {
     }
     fn firmware_version(&self) -> Result<String, String>;
     fn current_profile(&self) -> Result<u8, String>;
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String>;
     fn read_profile(&self, profile: u8) -> Result<ProfileState, String>;
     fn switch_profile(&self, profile: u8) -> Result<(), String>;
     fn apply_lighting(&self, profile: u8, settings: &LightingSettings) -> Result<(), String>;
@@ -94,6 +96,16 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     }
     fn current_profile(&self) -> Result<u8, String> {
         common::Keyboard::current_profile(self).map_err(|error| error.to_string())
+    }
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String> {
+        let state = common::Keyboard::read_profile(self, profile).map_err(|error| error.to_string())?;
+        Ok(FeatureState {
+            lighting: Some(state.lighting),
+            snap_tap: Some(SnapTapState {
+                enabled: state.snap_tap_enabled,
+                pairs: state.snap_tap_pairs,
+            }),
+        })
     }
     fn read_profile(&self, profile: u8) -> Result<ProfileState, String> {
         common::Keyboard::read_profile(self, profile).map_err(|error| error.to_string())
@@ -126,7 +138,7 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     }
 }
 
-/// Open only the selected verified HID interface; retain the Bushido packet codec.
+/// Open only the selected verified model on its exact vendor configuration collection.
 pub fn open(
     api: &HidApi,
     info: &DeviceInfo,
@@ -138,6 +150,9 @@ pub fn open(
         .iter()
         .find(|device| device.id == metadata.id)
         .ok_or("Unknown model")?;
+    if !crate::registry::interface_matches(canonical, info.usage_page(), info.usage()) {
+        return Err("Selected HID collection does not match the model registry".into());
+    }
     create_with_transport(
         info.open_device(api).map_err(|error| error.to_string())?,
         canonical,
@@ -207,13 +222,41 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
             vendor::unsupported("current hardware profile")
         }
     }
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String> {
+        if profile != 0 {
+            return vendor::unsupported("nonzero family-native profile");
+        }
+        let capabilities = crate::registry::usable_capabilities(self.metadata);
+        let lighting = if capabilities.lighting {
+            Some(
+                serde_json::from_value(self.execute(&vendor::Request::ReadLighting)?)
+                    .map_err(|error| format!("Invalid family lighting response: {error}"))?,
+            )
+        } else {
+            None
+        };
+        let snap_tap = if capabilities.snap_tap {
+            Some(
+                serde_json::from_value(self.execute(&vendor::Request::ReadSnap)?)
+                    .map_err(|error| format!("Invalid family Snap Tap response: {error}"))?,
+            )
+        } else {
+            None
+        };
+        Ok(FeatureState { lighting, snap_tap })
+    }
     fn read_profile(&self, _profile: u8) -> Result<ProfileState, String> {
-        vendor::unsupported("complete Common ProfileState is not a family-native snapshot; use individual read operations")
+        vendor::unsupported(
+            "complete Common ProfileState is not a family-native snapshot; use feature reads",
+        )
     }
     fn switch_profile(&self, _profile: u8) -> Result<(), String> {
         vendor::unsupported("profile switching")
     }
     fn apply_lighting(&self, profile: u8, settings: &LightingSettings) -> Result<(), String> {
+        if !crate::registry::usable_capabilities(self.metadata).lighting {
+            return vendor::unsupported("lighting adapter for this family/model");
+        }
         if profile != 0 {
             return vendor::unsupported("nonzero family-native profile");
         }
@@ -228,6 +271,9 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
         vendor::unsupported("performance")
     }
     fn apply_snap_tap(&self, profile: u8, enabled: bool, pairs: &[SnapPair]) -> Result<(), String> {
+        if !crate::registry::usable_capabilities(self.metadata).snap_tap {
+            return vendor::unsupported("Snap Tap adapter for this family/model");
+        }
         if profile != 0 {
             return vendor::unsupported("nonzero family-native profile");
         }
@@ -245,19 +291,18 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
     ) -> Result<(), String> {
         vendor::unsupported("Common single-key patch is not a complete family-native key table")
     }
-    fn write_macro(&self, id: u8, events: &[MacroEvent]) -> Result<(), String> {
-        self.execute(&vendor::Request::WriteMacro {
-            id,
-            name: format!("Macro {id}"),
-            events: events.to_vec(),
-        })
-        .map(|_| ())
+    fn write_macro(&self, _id: u8, _events: &[MacroEvent]) -> Result<(), String> {
+        vendor::unsupported(
+            "standalone macro writes are not exposed until the family table semantics are verified",
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::drivers::transport::mock::MockTransport;
+
     #[test]
     fn unverified_drivers_and_unknown_models_never_grant_transport_access() {
         assert!(ensure_available(None).is_err());
@@ -271,6 +316,24 @@ mod tests {
             assert!(driver.implemented);
         }
     }
+
+    #[test]
+    fn disabled_family_adapter_rejects_before_sending_transport_events() {
+        let metadata = crate::registry::devices()
+            .unwrap()
+            .iter()
+            .find(|device| device.router_id == "TFTKeyboardSeries")
+            .unwrap();
+        let driver = vendor::Keyboard::new(
+            MockTransport::default(),
+            Box::new(tft::Driver),
+            metadata,
+        )
+        .unwrap();
+        assert!(ProtocolDriver::apply_snap_tap(&driver, 0, true, &[]).is_err());
+        assert!(driver.transport.events.borrow().is_empty());
+    }
+
     #[test]
     fn bushido_effect_wire_ids_and_limits_remain_unchanged() {
         let mapping = [
