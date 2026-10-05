@@ -84,7 +84,15 @@ fn write_macro(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Err(error) = tray::show_window(app) {
+            eprintln!("Could not restore the running window: {error}");
+        }
+    }));
+
+    builder
         .setup(tray::setup)
         .on_window_event(tray::on_window_event)
         .invoke_handler(tauri::generate_handler![

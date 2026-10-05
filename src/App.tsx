@@ -428,7 +428,7 @@ export default function App() {
   </>;
 
   const renderLighting = () => <>
-    <PageTitle title={t("Lighting")} subtitle={`${t("Profile {number}", { number: profile + 1 })} · ${t(effectMeta.name)} · ${hex(lighting.color)}`} action={<button className="primary-btn" onClick={applyLight} disabled={!canWrite}><Save size={16}/> {t("Apply to keyboard")}</button>} />
+    <PageTitle title={t("Lighting")} subtitle={`${t("Profile {number}", { number: profile + 1 })} · ${t(effectMeta.name)} · ${hex(lighting.color)}`} />
     {devicePanel}
     <div className="lighting-page-grid">
       <Panel title={t("Color & effect settings")} icon={Lightbulb} className="lighting-editor-card">
@@ -444,6 +444,9 @@ export default function App() {
             {effectMeta.direction && <div className="directions"><b>{t("Direction")}</b>{(["Right", "Up", "Left", "Down"] as const).slice(0, lighting.effect === 1 ? 2 : 4).map((direction, i) => <button key={direction} aria-label={t(direction)} aria-pressed={lighting.direction === i} className={lighting.direction === i ? "active" : ""} onClick={() => setLighting({ ...lighting, direction: i })}>{["→", "↑", "←", "↓"][i]}</button>)}</div>}
             {effectMeta.custom && <div className="notice"><Info size={16}/><span>{t("This build preserves the selected hardware custom preset. A per-key color editor is not available yet.")}</span></div>}
           </div>
+        </div>
+        <div className="lighting-editor-actions">
+          <button className="primary-btn" onClick={applyLight} disabled={!canWrite}><Save size={16}/> {t("Apply to keyboard")}</button>
         </div>
       </Panel>
       <Panel title={t("Effects available on {device}", { device: deviceName })} icon={Sparkles} className="effects-card">

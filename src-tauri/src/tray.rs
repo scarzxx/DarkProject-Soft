@@ -40,7 +40,8 @@ fn save_preference(path: &Path, enabled: bool) -> Result<(), String> {
     .map_err(|error| error.to_string())
 }
 
-fn show_window(app: &AppHandle) -> tauri::Result<()> {
+/// Show, restore, and focus the existing main window.
+pub(crate) fn show_window(app: &AppHandle) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window("main") {
         window.show()?;
         window.unminimize()?;
