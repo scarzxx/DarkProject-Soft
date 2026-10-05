@@ -1,10 +1,29 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { DeviceSummary, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding, SnapPair } from "./types";
+import type {
+  DeviceSummary,
+  FeatureState,
+  LightingSettings,
+  MacroEvent,
+  PerformanceSettings,
+  ProfileState,
+  RawKeyBinding,
+  SnapPair,
+} from "./types";
 
-import { DEVICE_REGISTRY, getDeviceMetadata, hasVerifiedDriver, previewDevice } from "../data/registry";
+import {
+  DEVICE_REGISTRY,
+  getDeviceMetadata,
+  hasVerifiedDriver,
+  previewDevice,
+  supportsProfileState,
+} from "../data/registry";
 import { getDefaultProfile } from "../data/defaults";
 
 const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+export type EditableDeviceState =
+  | { profileState: ProfileState; features: null }
+  | { profileState: null; features: FeatureState };
 
 /** List connected native devices, or registry models in the browser preview. */
 export async function listDevices(): Promise<DeviceSummary[]> {
@@ -29,9 +48,30 @@ export async function scanDevice(deviceId?: string): Promise<DeviceSummary> {
   return isTauri() ? invoke("scan_device", { deviceId }) : requirePreviewDevice(deviceId);
 }
 
+export async function readFeatures(profile: number, deviceId?: string): Promise<FeatureState> {
+  const result = await command<FeatureState>("read_features", { profile }, deviceId);
+  if (result) return result;
+  const preview = requirePreviewDevice(deviceId);
+  const state = getDefaultProfile(preview.registryId!, profile);
+  return {
+    lighting: state.lighting,
+    snapTap: { enabled: state.snapTapEnabled, pairs: state.snapTapPairs },
+  };
+}
+
 export async function readProfile(profile: number, deviceId?: string): Promise<ProfileState> {
   const result = await command<ProfileState>("read_profile", { profile }, deviceId);
   return result ?? getDefaultProfile(requirePreviewDevice(deviceId).registryId!, profile);
+}
+
+/** Pick the lossless full-profile API only for families that explicitly support it. */
+export async function readDeviceState(device: DeviceSummary, profile: number): Promise<EditableDeviceState> {
+  const metadata = getDeviceMetadata(device.registryId);
+  if (!metadata) throw new Error("Selected device identity is unknown");
+  if (supportsProfileState(metadata)) {
+    return { profileState: await readProfile(profile, device.id), features: null };
+  }
+  return { profileState: null, features: await readFeatures(profile, device.id) };
 }
 
 export async function switchProfile(profile: number, deviceId?: string): Promise<void> {
