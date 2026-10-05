@@ -20,7 +20,7 @@ export interface DeviceSummary {
   id: string;
   registryId: string | null;
   styleName: string | null;
-  verified: boolean;
+  supported: boolean;
   known: boolean;
   connected: boolean;
   productName: string;
