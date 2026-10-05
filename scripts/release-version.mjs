@@ -38,5 +38,13 @@ let updater = read(updaterPath);
 updater = updater.replace(/return "\d+\.\d+\.\d+(?:-[^"]+)?";/g, `return "${raw}";`);
 write(updaterPath, updater);
 
+const preferencesPath = "src/components/PreferencesOverlay.tsx";
+let preferences = read(preferencesPath);
+preferences = preferences.replace(
+  /const \[appVersion, setAppVersion\] = useState\("[^"]+"\);/,
+  `const [appVersion, setAppVersion] = useState("${raw}");`,
+);
+write(preferencesPath, preferences);
+
 console.log(`Dark Control version updated to ${raw}.`);
 console.log(`Next: npm install, commit the version bump, then create and push tag v${raw}.`);
