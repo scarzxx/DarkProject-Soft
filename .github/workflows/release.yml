@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "package.json"
+      - "CHANGELOG.md"
 
 permissions:
   contents: write
@@ -29,87 +30,74 @@ jobs:
             throw "Invalid package.json version: $current"
           }
 
-          $previous = ""
-          $before = "${{ github.event.before }}"
-          if ($before -and $before -notmatch '^0+$') {
-            try {
-              $previousJson = git show "$before`:package.json" 2>$null | ConvertFrom-Json
-              $previous = [string]$previousJson.version
-            } catch {
-              $previous = ""
-            }
-          }
-
-          $changed = $current -ne $previous
-          "version=$current" >> $env:GITHUB_OUTPUT
-          "tag=v$current" >> $env:GITHUB_OUTPUT
-          "changed=$($changed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
-          Write-Host "Previous version: $previous"
-          Write-Host "Current version:  $current"
-          Write-Host "Release required: $changed"
-
-      - name: Stop when version did not change
-        if: steps.version.outputs.changed != 'true'
-        run: echo "package.json changed, but its version did not. No release will be created."
-
-      - name: Ensure release tag does not already exist
-        if: steps.version.outputs.changed == 'true'
-        shell: pwsh
-        run: |
-          $tag = "${{ steps.version.outputs.tag }}"
+          $tag = "v$current"
           $existing = git ls-remote --tags origin "refs/tags/$tag"
-          if (-not [string]::IsNullOrWhiteSpace(($existing -join "`n"))) {
-            throw "Tag $tag already exists. Increase package.json version before publishing another release."
-          }
+          $tagExists = -not [string]::IsNullOrWhiteSpace(($existing -join "`n"))
+          $releaseRequired = -not $tagExists
+
+          "version=$current" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "release_required=$($releaseRequired.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          Write-Host "Current version:  $current"
+          Write-Host "Tag exists:       $tagExists"
+          Write-Host "Release required: $releaseRequired"
+
+      - name: Stop when this version is already released
+        if: steps.version.outputs.release_required != 'true'
+        run: echo "Tag ${{ steps.version.outputs.tag }} already exists. No release will be created."
 
       - name: Setup Node.js
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Extract release notes from CHANGELOG
+        if: steps.version.outputs.release_required == 'true'
+        run: node scripts/extract-release-notes.mjs "${{ steps.version.outputs.version }}" release-notes.md
+
       - name: Setup Rust
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Synchronize application version
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: node scripts/release-version.mjs
 
       - name: Install frontend dependencies
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: npm install --no-audit --no-fund
 
       - name: Validate generated vendor metadata import
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: npm run data:import
 
       - name: Build frontend
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: npm run build
 
       - name: Test frontend and metadata routing
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: npm test
 
       - name: Check Rust backend
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: cargo check --manifest-path src-tauri/Cargo.toml
 
       - name: Lint Rust backend
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 
       - name: Test Rust backend
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
       - name: Build Windows setup EXE
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         run: npm run tauri:build -- --bundles nsis
 
       - name: Prepare GitHub Release EXE
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         shell: pwsh
         run: |
           $tag = "${{ steps.version.outputs.tag }}"
@@ -119,7 +107,7 @@ jobs:
           Copy-Item $nsis.FullName "release\Dark-Control-$tag-Windows-x64-setup.exe"
 
       - name: Create release tag
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         shell: pwsh
         run: |
           $tag = "${{ steps.version.outputs.tag }}"
@@ -129,7 +117,7 @@ jobs:
           git push origin $tag
 
       - name: Upload release workflow artifact
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: Dark-Control-${{ steps.version.outputs.tag }}-Windows-x64
@@ -138,12 +126,12 @@ jobs:
           retention-days: 30
 
       - name: Create GitHub Release
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.release_required == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Dark Control ${{ steps.version.outputs.tag }}
-          generate_release_notes: true
+          body_path: release-notes.md
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           fail_on_unmatched_files: true
           files: release/*.exe
