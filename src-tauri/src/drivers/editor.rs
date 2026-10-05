@@ -7,11 +7,14 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::{collections::HashMap, sync::OnceLock};
 
+type SlotMapping = HashMap<String, usize>;
+type LayoutRegistry = HashMap<String, SlotMapping>;
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LayoutRecord {
     style_name: String,
-    slot_mapping: HashMap<String, usize>,
+    slot_mapping: SlotMapping,
 }
 
 #[derive(Deserialize)]
@@ -20,9 +23,9 @@ struct PairRecord {
     kind: u8,
 }
 
-static LAYOUTS: OnceLock<Result<HashMap<String, HashMap<String, usize>>, String>> = OnceLock::new();
+static LAYOUTS: OnceLock<Result<LayoutRegistry, String>> = OnceLock::new();
 
-fn layout_registry() -> vendor::Result<&'static HashMap<String, HashMap<String, usize>>> {
+fn layout_registry() -> vendor::Result<&'static LayoutRegistry> {
     LAYOUTS
         .get_or_init(|| {
             let layouts: Vec<LayoutRecord> = serde_json::from_str(include_str!(
