@@ -30,8 +30,15 @@ pub struct DeviceMetadata {
     pub profiles: u8,
     pub verified: bool,
     pub connections: Vec<Connection>,
-    pub interfaces: Vec<Interface>,
     pub capabilities: DeviceCapabilities,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DeviceInterfaceRecord {
+    id: String,
+    #[serde(default)]
+    interfaces: Vec<Interface>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -49,6 +56,7 @@ pub struct DriverFeatureSet {
 }
 
 static REGISTRY: OnceLock<Result<Vec<DeviceMetadata>, String>> = OnceLock::new();
+static INTERFACES: OnceLock<Result<HashMap<String, Vec<Interface>>, String>> = OnceLock::new();
 static DRIVER_FEATURES: OnceLock<Result<HashMap<String, DriverFeatureSet>, String>> = OnceLock::new();
 
 /// Load bundled technical metadata once; invalid metadata returns an error.
@@ -60,6 +68,21 @@ pub fn devices() -> Result<&'static [DeviceMetadata], String> {
         })
         .as_ref()
         .map(Vec::as_slice)
+        .map_err(Clone::clone)
+}
+
+fn interface_registry() -> Result<&'static HashMap<String, Vec<Interface>>, String> {
+    INTERFACES
+        .get_or_init(|| {
+            let records: Vec<DeviceInterfaceRecord> =
+                serde_json::from_str(include_str!("../../registry/devices.json"))
+                    .map_err(|error| format!("Invalid interface registry: {error}"))?;
+            Ok(records
+                .into_iter()
+                .map(|record| (record.id, record.interfaces))
+                .collect())
+        })
+        .as_ref()
         .map_err(Clone::clone)
 }
 
@@ -86,14 +109,20 @@ pub fn connection_matches(device: &DeviceMetadata, vendor_id: u16, product_id: u
 
 /// Match the exact HID collection declared by vendor metadata for this model.
 pub fn interface_matches(device: &DeviceMetadata, usage_page: u16, usage: u16) -> bool {
-    device.interfaces.iter().any(|interface| {
-        let transport_ok = match interface.transport.as_deref() {
-            None => true,
-            Some(transport) => {
-                transport.eq_ignore_ascii_case("USB") || transport.eq_ignore_ascii_case("DONGLE")
-            }
-        };
-        transport_ok && interface.usage_page == usage_page && interface.usage == usage
+    let Ok(registry) = interface_registry() else {
+        return false;
+    };
+    registry.get(&device.id).is_some_and(|interfaces| {
+        interfaces.iter().any(|interface| {
+            let transport_ok = match interface.transport.as_deref() {
+                None => true,
+                Some(transport) => {
+                    transport.eq_ignore_ascii_case("USB")
+                        || transport.eq_ignore_ascii_case("DONGLE")
+                }
+            };
+            transport_ok && interface.usage_page == usage_page && interface.usage == usage
+        })
     })
 }
 
@@ -210,7 +239,7 @@ pub fn usable_capabilities(device: &DeviceMetadata) -> DeviceCapabilities {
         snap_tap,
         macros: driver.macros && advertised.macros,
         performance: driver.performance && advertised.performance,
-        profiles: driver.profiles && advertised.profiles,
+        profiles: driver.profile_state && driver.profiles && advertised.profiles,
         max_snap_tap_pairs: if snap_tap {
             advertised.max_snap_tap_pairs
         } else {
@@ -333,7 +362,8 @@ mod tests {
             .iter()
             .find(|device| device.router_id == "WitmodSeries")
             .unwrap();
-        let interface = witmod.interfaces.first().unwrap();
+        let interfaces = interface_registry().unwrap().get(&witmod.id).unwrap();
+        let interface = interfaces.first().unwrap();
         assert!(interface_matches(witmod, interface.usage_page, interface.usage));
         assert!(!interface_matches(witmod, 0x0001, 0x0006));
         let features = driver_features("WitmodSeries").unwrap();
