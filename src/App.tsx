@@ -130,8 +130,11 @@ export default function App() {
     setMacros([]);
     setActiveMacro(null);
     if (s.lighting) {
-      setLighting(s.lighting);
-      setHexValue(hex(s.lighting.color));
+      // Some vendor decoders intentionally do not return RGB for automatic-color effects.
+      // Keep that missing hardware field distinct and use only a deterministic editor fallback.
+      const color = s.lighting.color ?? DEF_LIGHT.color;
+      setLighting({ ...s.lighting, color });
+      setHexValue(hex(color));
     }
     if (s.snapTap) {
       setSnapEnabled(s.snapTap.enabled);
@@ -517,7 +520,7 @@ export default function App() {
         <div className="meta"><span>VID 0x{device?.vendorId.toString(16).toUpperCase() ?? "—"}</span><span>PID 0x{device?.productId.toString(16).toUpperCase() ?? "—"}</span><span>{firmwareName}</span></div>
         <button className="icon-btn" title={t("Reload from keyboard")} disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={17} className={busy ? "spin" : ""}/></button>
         <div className="grow"/>
-        {devices.length > 0 && <DevicePicker devices={devices} selectedId={device?.id} disabled={!!busy} onSelect={(id) => void loadDevice(id)}/>}
+        {devices.length > 0 && <DevicePicker devices={devices} selectedId={device?.id} disabled={!!busy} onSelect={(id) => void loadDevice(id)}/>} 
         {caps?.profiles && <select className="profile-select" disabled={!canWrite} aria-label={t("Active profile")} value={profile} onChange={(e) => void changeProfile(+e.target.value)}>{Array.from({ length: device?.profiles ?? 0 }, (_, p) => <option key={p} value={p}>{t("Profile {number}", { number: p + 1 })}</option>)}</select>}
         <input hidden ref={fileRef} type="file" accept=".dp,.json" onChange={(e) => e.target.files?.[0] && void importDp(e.target.files[0])}/>
       </header>
