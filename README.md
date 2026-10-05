@@ -65,7 +65,7 @@ npm run tauri:build
 
 Windows CI runs frontend and Rust checks on pull requests. A successful push to
 `main` additionally uploads a `Dark-Control-Windows-x64` workflow artifact containing
-the portable EXE, MSI installer and NSIS installer.
+only EXE files: the portable development executable and the NSIS setup executable.
 
 Translation, registry, layout, updater and command-routing tests:
 
@@ -109,11 +109,16 @@ npm run release:version -- 0.4.1
 npm install
 ```
 
-Push the matching `v0.4.1` tag to run the release workflow. The workflow builds the
-portable EXE, MSI and NSIS setup EXE, writes `SHA256SUMS.txt`, and publishes all of
-them as a normal GitHub Release. No Tauri updater key pair or signing secrets are
-needed. The repository must be public for installed apps to check releases without
-embedding a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
+Push the matching `v0.4.1` tag to run the release workflow. The public GitHub Release
+contains a single downloadable Windows application asset:
+
+```text
+Dark-Control-v0.4.1-Windows-x64-setup.exe
+```
+
+No MSI package, updater signing key pair, `latest.json`, or `.sig` files are used.
+The repository must be public for installed apps to check releases without embedding
+a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
 
 ## Safety
 
