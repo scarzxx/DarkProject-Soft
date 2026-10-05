@@ -28,7 +28,6 @@ pub struct DeviceMetadata {
     pub router_id: String,
     pub style_name: String,
     pub profiles: u8,
-    pub verified: bool,
     pub connections: Vec<Connection>,
     pub capabilities: DeviceCapabilities,
 }
@@ -96,7 +95,7 @@ fn driver_feature_registry() -> Result<&'static HashMap<String, DriverFeatureSet
         .map_err(Clone::clone)
 }
 
-/// Shared source of truth for operations that are safe to expose through the app.
+/// Shared source of truth for operations that are exposed through the app.
 pub fn driver_features(router_id: &str) -> Option<&'static DriverFeatureSet> {
     driver_feature_registry().ok()?.get(router_id)
 }
@@ -223,7 +222,7 @@ pub fn interface_candidate(
         .any(|device| interface_matches(device, usage_page, usage))
 }
 
-/// Intersect vendor-advertised features with the safe UI/command adapters for a router family.
+/// Intersect vendor-advertised features with the app adapters implemented for a router family.
 pub fn usable_capabilities(device: &DeviceMetadata) -> DeviceCapabilities {
     let Some(driver) = driver_features(&device.router_id) else {
         return DeviceCapabilities::default();
@@ -257,13 +256,13 @@ pub fn usable_capabilities(device: &DeviceMetadata) -> DeviceCapabilities {
     }
 }
 
-/// Build an inert descriptor when hardware identity or its driver is unverified.
+/// Build a descriptor for any recognized model whose protocol family is implemented.
 pub fn summary(info: &hidapi::DeviceInfo, metadata: Option<&DeviceMetadata>) -> DeviceSummary {
     let advertised = metadata
         .map(|device| device.capabilities.clone())
         .unwrap_or_default();
-    let verified = metadata.is_some_and(crate::drivers::available);
-    let capabilities = if verified {
+    let supported = metadata.is_some_and(crate::drivers::supported);
+    let capabilities = if supported {
         metadata.map(usable_capabilities).unwrap_or_default()
     } else {
         DeviceCapabilities::default()
@@ -283,7 +282,7 @@ pub fn summary(info: &hidapi::DeviceInfo, metadata: Option<&DeviceMetadata>) -> 
             .to_owned(),
         style_name: style,
         known: metadata.is_some(),
-        verified,
+        supported,
         connected: true,
         serial_number: info.serial_number().map(str::to_owned),
         vendor_id: info.vendor_id(),
@@ -305,12 +304,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shared_usb_id_does_not_verify_other_models() {
+    fn shared_usb_id_does_not_misidentify_other_models() {
         let registry = devices().unwrap();
         let bushido = identify(registry, 0x342D, 0xE40F, "DPKB_BUSHIDO_87_ANSI", None).unwrap();
-        assert!(crate::drivers::available(bushido));
+        assert!(crate::drivers::supported(bushido));
         let violet = identify(registry, 0x342D, 0xE40F, "DPKB_VIOLET_87_ANSI", None).unwrap();
-        assert!(!crate::drivers::available(violet));
+        assert!(crate::drivers::supported(violet));
         assert!(identify(registry, 0x342D, 0xE40F, "Unknown", None).is_none());
         assert!(identify(registry, 0xFFFF, 0xE40F, "DPKB_BUSHIDO_87_ANSI", None).is_none());
         assert!(identify(
@@ -335,7 +334,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(model.style_name, "WITMOD83UK");
-        assert!(!crate::drivers::available(model));
+        assert!(crate::drivers::supported(model));
         let bushido = identify(
             registry,
             0x342D,
@@ -344,7 +343,7 @@ mod tests {
             Some("0x342D0xE40F012"),
         )
         .unwrap();
-        assert!(crate::drivers::available(bushido));
+        assert!(crate::drivers::supported(bushido));
     }
 
     #[test]
@@ -376,17 +375,16 @@ mod tests {
     }
 
     #[test]
-    fn only_one_device_and_driver_are_verified() {
+    fn all_registered_models_have_an_implemented_driver() {
         let registry = devices().unwrap();
         assert_eq!(registry.len(), 45);
-        let verified: Vec<_> = registry
+        assert!(registry.iter().all(crate::drivers::supported));
+        let bushido = registry
             .iter()
-            .filter(|device| crate::drivers::available(device))
-            .collect();
-        assert_eq!(verified.len(), 1);
-        assert_eq!(verified[0].product_name, "DPKB_BUSHIDO_87_ANSI");
-        assert!(!verified[0].capabilities.performance);
-        assert_eq!(verified[0].profiles, 3);
+            .find(|device| device.product_name == "DPKB_BUSHIDO_87_ANSI")
+            .unwrap();
+        assert!(!bushido.capabilities.performance);
+        assert_eq!(bushido.profiles, 3);
         assert!(crate::drivers::descriptor("UnexpectedSeries").is_none());
     }
 
@@ -405,6 +403,7 @@ mod tests {
                     .find(|model| model.id == id.as_str().unwrap())
                     .unwrap();
                 assert_eq!(model.router_id, router);
+                assert!(crate::drivers::supported(model));
             }
         }
         let registry = devices().unwrap();
@@ -412,6 +411,6 @@ mod tests {
         let model_name =
             identify(registry, 0x0416, 0xC345, "DPP83_GSH_NAVY_ANSI_EN", None).unwrap();
         assert_eq!(usb_name.id, model_name.id);
-        assert!(!crate::drivers::available(usb_name));
+        assert!(crate::drivers::supported(usb_name));
     }
 }
