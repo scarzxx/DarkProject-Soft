@@ -16,7 +16,17 @@ test("browser preview exposes every registered model as supported", async () => 
     const features = await api.readFeatures(0, device.id);
     assert.ok("lighting" in features);
     assert.ok("snapTap" in features);
+    assert.ok("keyBindings" in features);
+    assert.ok("fnKeyBindings" in features);
+    assert.ok("macros" in features);
   }
+  const witmod = devices.find((device) => device.protocol === "WitmodSeries");
+  const editable = await api.readDeviceState(witmod, 0);
+  assert.equal(editable.features, null);
+  assert.equal(editable.profileState.profile, 0);
+  assert.ok(Array.isArray(editable.profileState.keyBindings));
+  assert.ok(Array.isArray(editable.profileState.fnKeyBindings));
+  assert.ok(Array.isArray(editable.profileState.macros));
   await assert.rejects(() => api.scanDevice("unknown"), /no longer connected/);
   await assert.rejects(() => api.scanDevice(""), /no longer connected/);
 });
@@ -47,6 +57,9 @@ test("native commands keep payloads, expose feature snapshots and target the sel
   const features = {
     lighting: { effect: 8, brightness: 80, speed: 50, direction: 0, color: [1, 2, 3], multiColor: false },
     snapTap: { enabled: true, pairs: [{ kind: 0, key1: 4, key2: 7 }] },
+    keyBindings: [{ slot: 1, kind: 1, code: 4 }],
+    fnKeyBindings: [{ slot: 1, kind: 1, code: 5 }],
+    macros: [{ id: 1, events: [{ hid: 4, pressed: true, delay: 25 }] }],
   };
   globalThis.window = {
     __TAURI_INTERNALS__: {
