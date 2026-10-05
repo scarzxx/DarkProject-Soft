@@ -28,6 +28,10 @@ pub struct DeviceMetadata {
     pub router_id: String,
     pub style_name: String,
     pub profiles: u8,
+    /// Legacy import metadata only. Runtime support never depends on this flag.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub verified: bool,
     pub connections: Vec<Connection>,
     pub capabilities: DeviceCapabilities,
 }
@@ -249,7 +253,6 @@ pub fn usable_capabilities(device: &DeviceMetadata) -> DeviceCapabilities {
         } else {
             Vec::new()
         },
-        // These need separate media/sync/actuation APIs and remain disabled.
         tft: false,
         sync: false,
         actuation: false,
