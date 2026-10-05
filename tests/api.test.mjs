@@ -3,27 +3,19 @@ import test from "node:test";
 import { loadTypescript } from "./load-typescript.mjs";
 
 const api = await loadTypescript(new URL("../src/lib/api.ts", import.meta.url));
-const verifiedId = "0x342D0xE40F012";
+const bushidoId = "0x342D0xE40F012";
 
-test("browser preview reads Bushido profiles and refuses every unverified model", async () => {
+test("browser preview exposes every registered model as supported", async () => {
   const devices = await api.listDevices();
   assert.equal(devices.length, 45);
-  assert.equal((await api.scanDevice()).registryId, verifiedId);
-  assert.equal((await api.readProfile(1, verifiedId)).profile, 1);
-  for (const device of devices.filter((device) => !device.verified)) {
-    assert.equal((await api.scanDevice(device.id)).verified, false);
-    const commands = [
-      () => api.readFeatures(0, device.id),
-      () => api.readDeviceState(device, 0),
-      () => api.readProfile(0, device.id),
-      () => api.switchProfile(0, device.id),
-      () => api.applyLighting(0, {}, device.id),
-      () => api.applyPerformance(0, {}, device.id),
-      () => api.applySnapTap(0, false, [], device.id),
-      () => api.applyKeyBinding(0, 1, {}, device.id),
-      () => api.writeMacro(1, [], device.id),
-    ];
-    for (const command of commands) await assert.rejects(command, /unverified/);
+  assert.ok(devices.every((device) => device.supported));
+  assert.equal((await api.scanDevice()).registryId, bushidoId);
+  assert.equal((await api.readProfile(1, bushidoId)).profile, 1);
+  for (const device of devices) {
+    assert.equal((await api.scanDevice(device.id)).supported, true);
+    const features = await api.readFeatures(0, device.id);
+    assert.ok("lighting" in features);
+    assert.ok("snapTap" in features);
   }
   await assert.rejects(() => api.scanDevice("unknown"), /no longer connected/);
   await assert.rejects(() => api.scanDevice(""), /no longer connected/);
@@ -74,8 +66,8 @@ test("native commands keep payloads, expose feature snapshots and target the sel
     assert.equal((await api.readProfile(2, "selected-hid-path")).profile, 2);
     const bushido = {
       id: "selected-hid-path",
-      registryId: verifiedId,
-      verified: true,
+      registryId: bushidoId,
+      supported: true,
     };
     const state = await api.readDeviceState(bushido, 1);
     assert.equal(state.profileState.profile, 1);
