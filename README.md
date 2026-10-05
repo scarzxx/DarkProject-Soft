@@ -25,12 +25,13 @@ Modern desktop configurator for supported **Dark Project** keyboards. Version **
 - searchable keyboard picker with layout and support information
 - all four normalized vendor JSON tables imported from the supplied data ZIP
 - optional close to tray, immediate hide button and localized open/exit menu
-- signed in-app updater with automatic/manual checks in Settings for release builds
+- GitHub Releases updater with automatic/manual checks in Settings
 - first-launch notice with remembered consent across restarts
 
 In Settings, choose language and appearance, configure **Close to tray**, and manage
 updates. Automatic update checks default to on and stay silent when no update is
-available. Release builds verify the update signature before installation.
+available. The app checks the latest public GitHub Release and can download and launch
+its Windows setup EXE directly; no updater signing keys are required.
 
 Rebuild application metadata from the preserved generated tables:
 
@@ -64,7 +65,7 @@ npm run tauri:build
 
 Windows CI runs frontend and Rust checks on pull requests. A successful push to
 `main` additionally uploads a `Dark-Control-Windows-x64` workflow artifact containing
-the portable EXE, MSI installer and NSIS installer.
+only EXE files: the portable development executable and the NSIS setup executable.
 
 Translation, registry, layout, updater and command-routing tests:
 
@@ -108,10 +109,16 @@ npm run release:version -- 0.4.1
 npm install
 ```
 
-Push the matching `v0.4.1` tag to run the signed release workflow. The workflow
-creates MSI/NSIS bundles, updater signatures and `latest.json`, then publishes the
-GitHub Release. One-time signing-key setup and the private-repository limitation are
-documented in [docs/UPDATES.md](docs/UPDATES.md).
+Push the matching `v0.4.1` tag to run the release workflow. The public GitHub Release
+contains a single downloadable Windows application asset:
+
+```text
+Dark-Control-v0.4.1-Windows-x64-setup.exe
+```
+
+No MSI package, updater signing key pair, `latest.json`, or `.sig` files are used.
+The repository must be public for installed apps to check releases without embedding
+a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
 
 ## Safety
 

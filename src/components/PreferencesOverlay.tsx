@@ -2,13 +2,13 @@ import {
   Check,
   CheckCircle2,
   Download,
+  Github,
   Languages,
   Monitor,
   Moon,
   PanelBottom,
   RefreshCw,
   RotateCcw,
-  ShieldCheck,
   Sun,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -22,6 +22,7 @@ import {
   AUTO_UPDATE_KEY,
   checkForUpdate,
   getAppVersion,
+  installGitHubUpdate,
   supportsUpdater,
   type Update,
 } from "../lib/updater";
@@ -34,69 +35,69 @@ const THEME_KEY = "dark-control.theme";
 const UPDATE_COPY = {
   cs: {
     title: "Aktualizace",
-    subtitle: "Kontrola, stažení a instalace nové verze Dark Control.",
+    subtitle: "Kontrola a instalace nové verze z GitHub Releases.",
     automatic: "Automaticky kontrolovat aktualizace",
-    automaticHint: "Při spuštění se na pozadí zkontroluje nová verze. Pokud žádná není, nic se nezobrazí.",
+    automaticHint: "Při spuštění se na pozadí zkontroluje nejnovější veřejný GitHub Release. Pokud žádný nový není, nic se nezobrazí.",
     check: "Zkontrolovat aktualizace",
-    checking: "Kontroluji aktualizace…",
+    checking: "Kontroluji GitHub Releases…",
     upToDate: "Používáte nejnovější verzi.",
     available: "Je dostupná nová verze",
     current: "Aktuální verze",
     newVersion: "Nová verze",
     download: "Stáhnout a nainstalovat",
-    downloading: "Stahuji aktualizaci",
-    installing: "Aktualizace byla stažena. Spouštím instalaci…",
+    downloading: "Stahuji instalátor z GitHub Releases…",
+    installing: "Instalátor byl spuštěn. Dark Control se ukončuje…",
     later: "Později",
     releaseNotes: "Poznámky k vydání",
-    error: "Aktualizace se nepodařilo zkontrolovat nebo nainstalovat.",
+    error: "Aktualizaci se nepodařilo zkontrolovat nebo nainstalovat.",
     desktopOnly: "Aktualizace jsou dostupné pouze v nainstalované desktopové aplikaci.",
-    signed: "Aktualizační balíček je před instalací ověřen kryptografickým podpisem.",
+    source: "Aktualizace se stahují přímo z veřejných GitHub Releases projektu.",
     promptTitle: "Dostupná aktualizace",
-    promptText: "Je dostupná novější verze Dark Control.",
+    promptText: "Na GitHub Releases je dostupná novější verze Dark Control.",
   },
   sk: {
     title: "Aktualizácie",
-    subtitle: "Kontrola, stiahnutie a inštalácia novej verzie Dark Control.",
+    subtitle: "Kontrola a inštalácia novej verzie z GitHub Releases.",
     automatic: "Automaticky kontrolovať aktualizácie",
-    automaticHint: "Pri spustení sa na pozadí skontroluje nová verzia. Ak žiadna nie je, nič sa nezobrazí.",
+    automaticHint: "Pri spustení sa na pozadí skontroluje najnovší verejný GitHub Release. Ak žiadny nový nie je, nič sa nezobrazí.",
     check: "Skontrolovať aktualizácie",
-    checking: "Kontrolujem aktualizácie…",
+    checking: "Kontrolujem GitHub Releases…",
     upToDate: "Používate najnovšiu verziu.",
     available: "Je dostupná nová verzia",
     current: "Aktuálna verzia",
     newVersion: "Nová verzia",
     download: "Stiahnuť a nainštalovať",
-    downloading: "Sťahujem aktualizáciu",
-    installing: "Aktualizácia bola stiahnutá. Spúšťam inštaláciu…",
+    downloading: "Sťahujem inštalátor z GitHub Releases…",
+    installing: "Inštalátor bol spustený. Dark Control sa ukončuje…",
     later: "Neskôr",
     releaseNotes: "Poznámky k vydaniu",
     error: "Aktualizáciu sa nepodarilo skontrolovať alebo nainštalovať.",
     desktopOnly: "Aktualizácie sú dostupné iba v nainštalovanej desktopovej aplikácii.",
-    signed: "Aktualizačný balík sa pred inštaláciou overí kryptografickým podpisom.",
+    source: "Aktualizácie sa sťahujú priamo z verejných GitHub Releases projektu.",
     promptTitle: "Dostupná aktualizácia",
-    promptText: "Je dostupná novšia verzia Dark Control.",
+    promptText: "Na GitHub Releases je dostupná novšia verzia Dark Control.",
   },
   en: {
     title: "Updates",
-    subtitle: "Check, download and install new Dark Control versions.",
+    subtitle: "Check and install new versions from GitHub Releases.",
     automatic: "Automatically check for updates",
-    automaticHint: "Dark Control checks in the background at startup. Nothing is shown when you are already up to date.",
+    automaticHint: "Dark Control checks the latest public GitHub Release in the background at startup. Nothing is shown when you are already up to date.",
     check: "Check for updates",
-    checking: "Checking for updates…",
+    checking: "Checking GitHub Releases…",
     upToDate: "You are using the latest version.",
     available: "A new version is available",
     current: "Current version",
     newVersion: "New version",
     download: "Download and install",
-    downloading: "Downloading update",
-    installing: "The update was downloaded. Starting the installer…",
+    downloading: "Downloading installer from GitHub Releases…",
+    installing: "The installer was started. Dark Control is closing…",
     later: "Later",
     releaseNotes: "Release notes",
     error: "Dark Control could not check for or install the update.",
     desktopOnly: "Updates are available only in the installed desktop application.",
-    signed: "The update package is cryptographically verified before installation.",
+    source: "Updates are downloaded directly from this project's public GitHub Releases.",
     promptTitle: "Update available",
-    promptText: "A newer version of Dark Control is available.",
+    promptText: "A newer Dark Control version is available on GitHub Releases.",
   },
 } as const;
 
@@ -122,7 +123,6 @@ export default function PreferencesOverlay() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>("idle");
   const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null);
   const [updateError, setUpdateError] = useState("");
-  const [updateProgress, setUpdateProgress] = useState(0);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const themeLabels: Record<ThemeMode, MessageKey> = { system: "System", dark: "Dark", light: "Light" };
 
@@ -160,7 +160,6 @@ export default function PreferencesOverlay() {
     }
     setUpdateStatus("checking");
     setUpdateError("");
-    setUpdateProgress(0);
     try {
       const update = await checkForUpdate();
       setAvailableUpdate(update);
@@ -173,8 +172,7 @@ export default function PreferencesOverlay() {
     } catch (error: unknown) {
       if (manual) {
         setUpdateStatus("error");
-        setUpdateError(error instanceof Error && error.message === "Updater is not configured in this build."
-          ? t("Updater is not configured in this build.") : String(error));
+        setUpdateError(String(error));
       } else {
         setUpdateStatus("idle");
       }
@@ -191,22 +189,8 @@ export default function PreferencesOverlay() {
     if (!availableUpdate) return;
     setUpdateStatus("downloading");
     setUpdateError("");
-    setUpdateProgress(0);
-    let downloaded = 0;
-    let total = 0;
     try {
-      await availableUpdate.downloadAndInstall((event) => {
-        if (event.event === "Started") {
-          total = event.data.contentLength ?? 0;
-          setUpdateProgress(0);
-        } else if (event.event === "Progress") {
-          downloaded += event.data.chunkLength;
-          if (total > 0) setUpdateProgress(Math.min(100, Math.round((downloaded / total) * 100)));
-        } else if (event.event === "Finished") {
-          setUpdateProgress(100);
-          setUpdateStatus("installing");
-        }
-      }, { timeout: 120_000, restartAfterInstall: true });
+      await installGitHubUpdate(availableUpdate);
       setUpdateStatus("installing");
     } catch (error: unknown) {
       setUpdateStatus("error");
@@ -283,7 +267,7 @@ export default function PreferencesOverlay() {
   const updateStateText = updateStatus === "checking" ? copy.checking
     : updateStatus === "up-to-date" ? copy.upToDate
       : updateStatus === "available" ? `${copy.available}: ${availableUpdate?.version ?? ""}`
-        : updateStatus === "downloading" ? `${copy.downloading} · ${updateProgress}%`
+        : updateStatus === "downloading" ? copy.downloading
           : updateStatus === "installing" ? copy.installing
             : updateStatus === "error" ? copy.error
               : "";
@@ -358,13 +342,12 @@ export default function PreferencesOverlay() {
               {availableUpdate && <span>{copy.newVersion}: <b>v{availableUpdate.version}</b></span>}
             </div>
             {updateStateText && <div className={`update-status ${updateStatus === "error" ? "error" : ""}`}>{updateStatus === "up-to-date" && <CheckCircle2 size={15}/>}<span>{updateStateText}</span></div>}
-            {updateStatus === "downloading" && <div className="update-progress"><i style={{ width: `${updateProgress}%` }}/></div>}
             {updateError && <p className="update-error" role="alert">{updateError}</p>}
             <div className="update-actions">
               <button className="reset-preferences" disabled={updateStatus === "checking" || updateStatus === "downloading" || updateStatus === "installing"} onClick={() => void performUpdateCheck(true)}><RefreshCw size={15}/>{copy.check}</button>
               {availableUpdate && <button className="primary-btn update-install" disabled={updateStatus === "downloading" || updateStatus === "installing"} onClick={() => void installAvailableUpdate()}><Download size={15}/>{copy.download}</button>}
             </div>
-            <p className="update-signature-note"><ShieldCheck size={14}/>{supportsUpdater() ? copy.signed : copy.desktopOnly}</p>
+            <p className="update-signature-note"><Github size={14}/>{supportsUpdater() ? copy.source : copy.desktopOnly}</p>
           </article>
 
           <article className="preference-card app-card">
@@ -386,7 +369,7 @@ export default function PreferencesOverlay() {
           <p>{copy.promptText}</p>
           <div className="update-dialog-versions"><span>{copy.current}: <b>v{appVersion}</b></span><span>{copy.newVersion}: <b>v{availableUpdate.version}</b></span></div>
           {availableUpdate.body && <div className="update-notes"><strong>{copy.releaseNotes}</strong><p>{availableUpdate.body}</p></div>}
-          {updateStatus === "downloading" && <><div className="update-progress"><i style={{ width: `${updateProgress}%` }}/></div><small>{copy.downloading} · {updateProgress}%</small></>}
+          {updateStatus === "downloading" && <small>{copy.downloading}</small>}
           {updateStatus === "installing" && <small>{copy.installing}</small>}
           {updateError && <p className="update-error" role="alert">{copy.error} {updateError}</p>}
         </div>

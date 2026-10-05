@@ -84,13 +84,7 @@ fn write_macro(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let context = tauri::generate_context!();
-    let updater_enabled = updater::configured(context.config().plugins.0.get("updater"));
-    let mut builder = tauri::Builder::default().manage(updater::Availability(updater_enabled));
-    if updater_enabled {
-        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
-    }
-    builder
+    tauri::Builder::default()
         .setup(tray::setup)
         .on_window_event(tray::on_window_event)
         .invoke_handler(tauri::generate_handler![
@@ -108,8 +102,8 @@ pub fn run() {
             tray::set_close_to_tray,
             tray::set_tray_language,
             tray::hide_to_tray,
-            updater::updater_configured
+            updater::install_github_release
         ])
-        .run(context)
+        .run(tauri::generate_context!())
         .expect("error while running Dark Control");
 }
