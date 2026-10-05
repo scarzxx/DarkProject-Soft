@@ -45,6 +45,15 @@ export interface LightingSettings {
   multiColor: boolean;
 }
 
+export interface LightingFeatureState {
+  effect: number;
+  brightness: number;
+  speed: number;
+  direction: number;
+  color: [number, number, number] | null;
+  multiColor: boolean;
+}
+
 export interface PerformanceSettings {
   pollingRate: number;
   inputLatency: number;
@@ -64,7 +73,7 @@ export interface SnapTapState {
 }
 
 export interface FeatureState {
-  lighting: LightingSettings | null;
+  lighting: LightingFeatureState | null;
   snapTap: SnapTapState | null;
 }
 
