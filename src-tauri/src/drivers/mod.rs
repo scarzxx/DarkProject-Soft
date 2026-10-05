@@ -44,26 +44,23 @@ pub fn descriptor(router_id: &str) -> Option<&'static DriverDescriptor> {
     DRIVERS.iter().find(|driver| driver.router_id == router_id)
 }
 
-/// Verification belongs to the individual model, never just to shared USB IDs.
-pub fn available(metadata: &DeviceMetadata) -> bool {
-    metadata.verified
-        && crate::registry::devices().is_ok_and(|devices| {
-            devices.iter().any(|device| {
-                device.id == metadata.id
-                    && device.router_id == metadata.router_id
-                    && device.style_name == metadata.style_name
-                    && device.verified
-            })
+/// Every canonical registry model is supported when its protocol family is implemented.
+pub fn supported(metadata: &DeviceMetadata) -> bool {
+    crate::registry::devices().is_ok_and(|devices| {
+        devices.iter().any(|device| {
+            device.id == metadata.id
+                && device.router_id == metadata.router_id
+                && device.style_name == metadata.style_name
         })
-        && descriptor(&metadata.router_id).is_some_and(|driver| driver.implemented)
+    }) && descriptor(&metadata.router_id).is_some_and(|driver| driver.implemented)
 }
 
-/// Reject unverified drivers before constructing or opening any HID transport.
-pub fn ensure_available(metadata: Option<&DeviceMetadata>) -> Result<(), String> {
-    if metadata.is_some_and(available) {
+/// Reject unknown or unsupported identities before constructing a HID transport.
+pub fn ensure_supported(metadata: Option<&DeviceMetadata>) -> Result<(), String> {
+    if metadata.is_some_and(supported) {
         Ok(())
     } else {
-        Err("Device is unverified; HID commands are disabled".into())
+        Err("Device is unsupported; HID commands are disabled".into())
     }
 }
 
@@ -145,13 +142,13 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     }
 }
 
-/// Open only the selected verified model on its exact vendor configuration collection.
+/// Open a recognized model on its exact vendor configuration collection.
 pub fn open(
     api: &HidApi,
     info: &DeviceInfo,
     metadata: Option<&DeviceMetadata>,
 ) -> Result<Box<dyn ProtocolDriver>, String> {
-    ensure_available(metadata)?;
+    ensure_supported(metadata)?;
     let metadata = metadata.ok_or("Missing device metadata")?;
     let canonical = crate::registry::devices()?
         .iter()
@@ -170,21 +167,15 @@ pub fn open(
     )
 }
 
-/// Select by canonical model identity and router. Production access is gated in open.
+/// Select by canonical model identity and router. Unknown identities remain blocked.
 pub fn create_with_transport<T: transport::HidTransport + 'static>(
     transport: T,
     metadata: &'static DeviceMetadata,
     product_name: String,
     serial_number: Option<String>,
 ) -> Result<Box<dyn ProtocolDriver>, String> {
-    if !crate::registry::devices()?.iter().any(|device| {
-        device.id == metadata.id
-            && device.router_id == metadata.router_id
-            && device.style_name == metadata.style_name
-    }) {
-        return Err(
-            "unsupported/unverified: model/router/layout identity is not registered".into(),
-        );
+    if !supported(metadata) {
+        return Err("unsupported: model/router/layout identity is not registered".into());
     }
     if metadata.router_id == "CommonKeyboardSeries" {
         return Ok(Box::new(common::Keyboard {
@@ -208,7 +199,7 @@ fn codec(router_id: &str) -> Result<Box<dyn vendor::Codec>, String> {
         "SparkLinkSeries" => Box::new(sparklink::Driver),
         "HFDKBSeries" => Box::new(hfd::Driver),
         "HFDKBRGBSeries" => Box::new(hfd_rgb::Driver),
-        _ => return Err("unsupported/unverified: unknown routerID".into()),
+        _ => return Err("unsupported: unknown routerID".into()),
     })
 }
 
@@ -300,7 +291,7 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
     }
     fn write_macro(&self, _id: u8, _events: &[MacroEvent]) -> Result<(), String> {
         vendor::unsupported(
-            "standalone macro writes are not exposed until the family table semantics are verified",
+            "standalone macro writes are not exposed until the family table semantics are supported",
         )
     }
 }
@@ -311,15 +302,12 @@ mod tests {
     use crate::drivers::transport::mock::MockTransport;
 
     #[test]
-    fn unverified_drivers_and_unknown_models_never_grant_transport_access() {
-        assert!(ensure_available(None).is_err());
+    fn all_registered_models_grant_driver_access_and_unknown_models_do_not() {
+        assert!(ensure_supported(None).is_err());
         for device in crate::registry::devices().unwrap() {
-            assert_eq!(
-                ensure_available(Some(device)).is_ok(),
-                device.product_name == "DPKB_BUSHIDO_87_ANSI"
-            );
+            assert!(ensure_supported(Some(device)).is_ok());
         }
-        for driver in DRIVERS.iter().skip(1) {
+        for driver in &DRIVERS {
             assert!(driver.implemented);
         }
     }
