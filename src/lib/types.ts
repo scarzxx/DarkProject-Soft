@@ -58,6 +58,16 @@ export interface SnapPair {
   key2: number;
 }
 
+export interface SnapTapState {
+  enabled: boolean;
+  pairs: SnapPair[];
+}
+
+export interface FeatureState {
+  lighting: LightingSettings | null;
+  snapTap: SnapTapState | null;
+}
+
 export interface RawKeyBinding {
   slot: number;
   code: number;
