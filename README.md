@@ -1,6 +1,6 @@
 # Dark Control
 
-Modern desktop configurator for supported **Dark Project** keyboards. Version **0.4.1**.
+Modern desktop configurator for supported **Dark Project** keyboards. Version **0.4.2**.
 
 > Independent community project. Not affiliated with or endorsed by Dark Project.
 
@@ -123,6 +123,17 @@ Changing code without changing `package.json` version does not create a new rele
 No MSI package, updater signing key pair, `latest.json`, or `.sig` files are used.
 The repository must be public for installed apps to check releases without embedding
 a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
+
+## License
+
+Dark Control is **proprietary / source-available software**, not an open-source project.
+Official, unmodified binary releases may be downloaded, installed, and used. The source
+code is provided for viewing and reference only; copying, modifying, redistributing,
+publishing derivative works, or distributing unofficial builds requires prior written
+permission from the copyright holder.
+
+See [LICENSE](LICENSE) for the complete terms. Third-party libraries, trademarks,
+vendor data, firmware, and other third-party materials remain subject to their own terms.
 
 ## Safety
 
