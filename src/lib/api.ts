@@ -20,6 +20,7 @@ import {
 import { getDefaultProfile } from "../data/defaults";
 
 const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+const DEFAULT_PREVIEW_PRODUCT = "DPKB_BUSHIDO_87_ANSI";
 
 export type EditableDeviceState =
   | { profileState: ProfileState; features: null }
@@ -32,7 +33,9 @@ export async function listDevices(): Promise<DeviceSummary[]> {
 
 function requirePreviewDevice(deviceId?: string): DeviceSummary {
   const model = deviceId !== undefined ? getDeviceMetadata(deviceId)
-    : DEVICE_REGISTRY.find(hasSupportedDriver);
+    : DEVICE_REGISTRY.find((device) =>
+      device.productName === DEFAULT_PREVIEW_PRODUCT && hasSupportedDriver(device))
+      ?? DEVICE_REGISTRY.find(hasSupportedDriver);
   if (!model) throw new Error("Selected device is no longer connected");
   return previewDevice(model);
 }
