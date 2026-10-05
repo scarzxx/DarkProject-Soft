@@ -25,7 +25,7 @@ pub struct DeviceSummary {
     pub registry_id: Option<String>,
     pub style_name: Option<String>,
     pub known: bool,
-    pub verified: bool,
+    pub supported: bool,
     pub connected: bool,
     pub product_name: String,
     pub serial_number: Option<String>,
