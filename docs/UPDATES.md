@@ -23,6 +23,11 @@ Every successful push to `main` builds and uploads the workflow artifact `Dark-C
 
 These are development artifacts. They are retained by GitHub Actions for 30 days and are not the signed updater release channel.
 
+Local development and unsigned builds start without the updater plugin when
+`plugins.updater` has no public key and endpoints. Manual update checks explain
+that this build is not configured. The release workflow supplies the configuration
+through `tauri.release.conf.json`; the app reads that effective configuration.
+
 ## One-time updater signing setup
 
 Tauri requires signed update bundles and does not allow signature verification to be disabled.

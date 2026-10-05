@@ -1,4 +1,5 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
 export const AUTO_UPDATE_KEY = "dark-control.auto-updates";
@@ -22,7 +23,10 @@ export async function getAppVersion(): Promise<string> {
 export async function checkForUpdate(): Promise<Update | null> {
   if (!supportsUpdater()) return null;
   if (!inFlightCheck) {
-    inFlightCheck = check({ timeout: 15_000 }).finally(() => {
+    inFlightCheck = invoke<boolean>("updater_configured").then((configured) => {
+      if (!configured) throw new Error("Updater is not configured in this build.");
+      return check({ timeout: 15_000 });
+    }).finally(() => {
       inFlightCheck = null;
     });
   }

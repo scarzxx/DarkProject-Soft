@@ -1,8 +1,35 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import { loadTypescript } from "./load-typescript.mjs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
+
+test("unconfigured builds skip the updater plugin and configured checks remain coalesced", async () => {
+  const updater = await loadTypescript(new URL("../src/lib/updater.ts", import.meta.url));
+  const previous = globalThis.window;
+  const calls = [];
+  let configured = false;
+  globalThis.window = { __TAURI_INTERNALS__: { invoke: async (command) => {
+    calls.push(command);
+    if (command === "updater_configured") return configured;
+    if (command === "plugin:updater|check") return null;
+    throw new Error(`Unexpected command: ${command}`);
+  } } };
+  try {
+    const results = await Promise.allSettled([updater.checkForUpdate(), updater.checkForUpdate()]);
+    assert.ok(results.every(result => result.status === "rejected"
+      && result.reason.message === "Updater is not configured in this build."));
+    assert.deepEqual(calls, ["updater_configured"]);
+    calls.length = 0;
+    configured = true;
+    assert.deepEqual(await Promise.all([updater.checkForUpdate(), updater.checkForUpdate()]), [null, null]);
+    assert.deepEqual(calls, ["updater_configured", "plugin:updater|check"]);
+  } finally {
+    if (previous === undefined) delete globalThis.window;
+    else globalThis.window = previous;
+  }
+});
 
 test("desktop settings expose automatic and manual updater controls", () => {
   const settings = read("src/components/PreferencesOverlay.tsx");

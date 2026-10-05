@@ -173,7 +173,8 @@ export default function PreferencesOverlay() {
     } catch (error: unknown) {
       if (manual) {
         setUpdateStatus("error");
-        setUpdateError(String(error));
+        setUpdateError(error instanceof Error && error.message === "Updater is not configured in this build."
+          ? t("Updater is not configured in this build.") : String(error));
       } else {
         setUpdateStatus("idle");
       }

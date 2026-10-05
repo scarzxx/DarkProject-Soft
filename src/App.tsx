@@ -26,6 +26,7 @@ import { getKeyboardKeys, getHidOptions, keyHid as physicalKeyHid, type KeyDef }
 import * as api from "./lib/api";
 import { useLanguage } from "./lib/i18n";
 import { translateError } from "./lib/messages";
+import { hasRiskConsent, rememberRiskConsent } from "./lib/riskConsent";
 import type { MessageKey, MessageParameters } from "./lib/messages";
 import type {
   DeviceSummary,
@@ -96,7 +97,7 @@ type StatusMessage =
 
 export default function App() {
   const { language, t } = useLanguage();
-  const [riskAccepted, setRiskAccepted] = useState(false);
+  const [riskAccepted, setRiskAccepted] = useState(hasRiskConsent);
   const [riskChecked, setRiskChecked] = useState(false);
   const [page, setPage] = useState<Page>("device");
   const [device, setDevice] = useState<DeviceSummary | null>(null);
@@ -578,7 +579,10 @@ export default function App() {
           <input type="checkbox" checked={riskChecked} onChange={(event) => setRiskChecked(event.target.checked)} style={{ marginTop: 2 }}/>
           <span>{risk.check}</span>
         </label>
-        <button className="primary-btn" style={{ width: "100%", height: 40, marginTop: 14 }} disabled={!riskChecked} onClick={() => setRiskAccepted(true)}>{risk.accept}</button>
+        <button className="primary-btn" style={{ width: "100%", height: 40, marginTop: 14 }} disabled={!riskChecked} onClick={() => {
+          rememberRiskConsent();
+          setRiskAccepted(true);
+        }}>{risk.accept}</button>
       </div>
     </div>}
   </>;

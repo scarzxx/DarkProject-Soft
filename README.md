@@ -26,6 +26,7 @@ Modern desktop configurator for supported **Dark Project** keyboards. Version **
 - all four normalized vendor JSON tables imported from the supplied data ZIP
 - optional close to tray, immediate hide button and localized open/exit menu
 - signed in-app updater with automatic/manual checks in Settings for release builds
+- first-launch notice with remembered consent across restarts
 
 In Settings, choose language and appearance, configure **Close to tray**, and manage
 updates. Automatic update checks default to on and stay silent when no update is

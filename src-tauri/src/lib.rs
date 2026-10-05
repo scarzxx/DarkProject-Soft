@@ -3,6 +3,7 @@ mod drivers;
 mod models;
 mod registry;
 mod tray;
+mod updater;
 
 use models::{
     DeviceSummary, FeatureState, LightingSettings, MacroEvent, PerformanceSettings, ProfileState,
@@ -83,8 +84,13 @@ fn write_macro(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    let context = tauri::generate_context!();
+    let updater_enabled = updater::configured(context.config().plugins.0.get("updater"));
+    let mut builder = tauri::Builder::default().manage(updater::Availability(updater_enabled));
+    if updater_enabled {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+    builder
         .setup(tray::setup)
         .on_window_event(tray::on_window_event)
         .invoke_handler(tauri::generate_handler![
@@ -101,8 +107,9 @@ pub fn run() {
             tray::get_close_to_tray,
             tray::set_close_to_tray,
             tray::set_tray_language,
-            tray::hide_to_tray
+            tray::hide_to_tray,
+            updater::updater_configured
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running Dark Control");
 }
