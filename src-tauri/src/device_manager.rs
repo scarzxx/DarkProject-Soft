@@ -1,7 +1,8 @@
+use crate::drivers::transport::HidTransport;
 use crate::drivers::{self, ProtocolDriver};
 use crate::models::DeviceSummary;
 use crate::registry::{self, DeviceMetadata};
-use hidapi::{DeviceInfo, HidApi, HidDevice};
+use hidapi::{DeviceInfo, HidApi};
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -120,7 +121,7 @@ fn witmod_hardware_name(bytes: &[u8]) -> Option<String> {
     (!name.trim().is_empty()).then(|| name.trim().to_owned())
 }
 
-fn witmod_block(device: &HidDevice, expected_index: u8) -> Option<Vec<u8>> {
+fn witmod_block<T: HidTransport>(device: &T, expected_index: u8) -> Option<Vec<u8>> {
     // The vendor waits roughly 500 ms after command 13. Poll for up to two seconds
     // per block so a normal delayed response is not mistaken for an absent device.
     for _ in 0..8 {
@@ -144,6 +145,18 @@ fn witmod_block(device: &HidDevice, expected_index: u8) -> Option<Vec<u8>> {
         return Some(payload[5..63].to_vec());
     }
     None
+}
+
+fn query_witmod_hardware_name<T: HidTransport>(device: &T) -> Option<String> {
+    let mut request = vec![0u8; 64];
+    request[0] = 1; // numbered HID output report
+    request[1] = 13; // vendor identity/version query
+    if device.write(&request).ok()? != request.len() {
+        return None;
+    }
+    let mut combined = witmod_block(device, 0)?;
+    combined.extend(witmod_block(device, 1)?);
+    witmod_hardware_name(&combined)
 }
 
 /// Vendor Witmod devices with generic USB descriptors identify themselves through command 13.
@@ -173,15 +186,7 @@ fn probe_witmod_identity<'a>(
     }
 
     let device = info.open_device(api).ok()?;
-    let mut request = vec![0u8; 64];
-    request[0] = 1; // numbered HID output report
-    request[1] = 13; // vendor identity/version query
-    if device.write(&request).ok()? != request.len() {
-        return None;
-    }
-    let mut combined = witmod_block(&device, 0)?;
-    combined.extend(witmod_block(&device, 1)?);
-    let hardware_name = witmod_hardware_name(&combined)?;
+    let hardware_name = query_witmod_hardware_name(&device)?;
     candidates.into_iter().find(|candidate| {
         [
             candidate.hardware_name.as_str(),
@@ -239,7 +244,8 @@ pub fn open_driver(id: Option<&str>) -> Result<Box<dyn ProtocolDriver>, String> 
 
 #[cfg(test)]
 mod tests {
-    use super::{highest_ranked, witmod_hardware_name};
+    use super::{highest_ranked, query_witmod_hardware_name, witmod_hardware_name};
+    use crate::drivers::transport::mock::{Event, MockTransport};
 
     #[test]
     fn identical_models_keep_distinct_paths_and_legacy_tie_order() {
@@ -281,5 +287,34 @@ mod tests {
             Some("GK8170MDPRGBEU")
         );
         assert_eq!(witmod_hardware_name(&[0; 116]), None);
+    }
+
+    #[test]
+    fn witmod_identity_query_uses_only_command_13_and_ordered_input_blocks() {
+        let mock = MockTransport::default();
+        let mut combined = vec![0u8; 116];
+        let text = b"KEYBOARD,GK8170MDPRGBEU,V1_2_3_4";
+        combined[..text.len()].copy_from_slice(text);
+        for (index, chunk) in combined.chunks(58).enumerate() {
+            let mut report = vec![0u8; 64];
+            report[0] = 1;
+            report[1] = 13;
+            report[4] = index as u8;
+            report[6..64].copy_from_slice(chunk);
+            mock.input.borrow_mut().push_back(report);
+        }
+        assert_eq!(
+            query_witmod_hardware_name(&mock).as_deref(),
+            Some("GK8170MDPRGBEU")
+        );
+        let events = mock.events.borrow();
+        assert!(matches!(
+            events.first(),
+            Some(Event::Output(data)) if data.len() == 64 && data[0] == 1 && data[1] == 13
+        ));
+        assert_eq!(
+            events.iter().filter(|event| matches!(event, Event::Output(_))).count(),
+            1
+        );
     }
 }
