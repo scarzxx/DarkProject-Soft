@@ -52,7 +52,7 @@ export async function readFeatures(profile: number, deviceId?: string): Promise<
   const result = await command<FeatureState>("read_features", { profile }, deviceId);
   if (result) return result;
   const preview = requirePreviewDevice(deviceId);
-  const state = getDefaultProfile(preview.registryId!, profile);
+  const state = await getDefaultProfile(preview.registryId!, profile);
   return {
     lighting: state.lighting,
     snapTap: { enabled: state.snapTapEnabled, pairs: state.snapTapPairs },
