@@ -70,6 +70,20 @@ pub struct SnapPair {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SnapTapState {
+    pub enabled: bool,
+    pub pairs: Vec<SnapPair>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureState {
+    pub lighting: Option<LightingSettings>,
+    pub snap_tap: Option<SnapTapState>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RawKeyBinding {
     pub slot: usize,
     pub code: u8,
