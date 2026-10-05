@@ -13,7 +13,7 @@ import type {
 import {
   DEVICE_REGISTRY,
   getDeviceMetadata,
-  hasVerifiedDriver,
+  hasSupportedDriver,
   previewDevice,
   supportsProfileState,
 } from "../data/registry";
@@ -32,15 +32,15 @@ export async function listDevices(): Promise<DeviceSummary[]> {
 
 function requirePreviewDevice(deviceId?: string): DeviceSummary {
   const model = deviceId !== undefined ? getDeviceMetadata(deviceId)
-    : DEVICE_REGISTRY.find(hasVerifiedDriver);
+    : DEVICE_REGISTRY.find(hasSupportedDriver);
   if (!model) throw new Error("Selected device is no longer connected");
   return previewDevice(model);
 }
 
 async function command<T>(name: string, payload: Record<string, unknown>, deviceId?: string): Promise<T | undefined> {
   if (isTauri()) return invoke<T>(name, { ...payload, deviceId });
-  if (!requirePreviewDevice(deviceId).verified) {
-    throw new Error("Device is unverified; HID commands are disabled");
+  if (!requirePreviewDevice(deviceId).supported) {
+    throw new Error("Device is unsupported; HID commands are disabled");
   }
 }
 
