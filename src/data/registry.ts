@@ -1,4 +1,5 @@
 import devices from "../../registry/devices.json";
+import driverCapabilities from "../../registry/driver-capabilities.json";
 import layouts from "../../registry/layouts.json";
 import protocols from "../../registry/protocols.json";
 import type { DeviceCapabilities, DeviceSummary } from "../lib/types";
@@ -21,6 +22,18 @@ export interface DeviceMetadata {
   capabilities: DeviceCapabilities;
   connections: { vendorId: number; productId: number; transport: string }[];
   interfaces: { usagePage: number; usage: number; transport: string | null }[];
+}
+
+export interface DriverFeatureSet {
+  profileState: boolean;
+  lighting: boolean;
+  customLighting: boolean;
+  keybindings: boolean;
+  fnLayer: boolean;
+  snapTap: boolean;
+  macros: boolean;
+  performance: boolean;
+  profiles: boolean;
 }
 
 export interface LayoutKey {
@@ -48,6 +61,9 @@ export const LAYOUT_REGISTRY = new Map<string, KeyboardLayout>(
 );
 const DEVICE_BY_ID = new Map(DEVICE_REGISTRY.map((device) => [device.id, device]));
 export const PROTOCOL_REGISTRY = new Map(protocols.map((protocol) => [protocol.routerId, protocol]));
+export const DRIVER_CAPABILITIES = new Map<string, DriverFeatureSet>(
+  Object.entries(driverCapabilities),
+);
 
 /** Resolve technical device metadata by its vendor model identifier. */
 export function getDeviceMetadata(id: string | null): DeviceMetadata | undefined {
@@ -59,28 +75,41 @@ export function getLayout(styleName: string | null): KeyboardLayout | undefined 
   return styleName === null ? undefined : LAYOUT_REGISTRY.get(styleName);
 }
 
-/** Expose only features with a verified, implemented protocol driver. */
-export function availableCapabilities(device: DeviceMetadata): DeviceCapabilities {
-  const available = hasVerifiedDriver(device);
-  return {
-    lighting: available && device.capabilities.lighting,
-    customLighting: available && device.capabilities.customLighting,
-    keybindings: available && device.capabilities.keybindings,
-    fnLayer: available && device.capabilities.fnLayer,
-    snapTap: available && device.capabilities.snapTap,
-    macros: available && device.capabilities.macros,
-    performance: available && device.capabilities.performance,
-    profiles: available && device.capabilities.profiles,
-    maxSnapTapPairs: available ? device.capabilities.maxSnapTapPairs : 0,
-    lightingEffects: available ? device.capabilities.lightingEffects : [],
-    tft: false, sync: false, actuation: false,
-  };
+/** Check model verification plus a registered protocol and safe UI adapter. */
+export function hasVerifiedDriver(device: DeviceMetadata): boolean {
+  return device.verified
+    && DRIVER_CAPABILITIES.has(device.routerId)
+    && PROTOCOL_REGISTRY.get(device.routerId)?.deviceIds.includes(device.id) === true;
 }
 
-/** Check both model verification and the driver supported by this build. */
-export function hasVerifiedDriver(device: DeviceMetadata): boolean {
-  return device.verified && device.routerId === "CommonKeyboardSeries"
-    && PROTOCOL_REGISTRY.get(device.routerId)?.deviceIds.includes(device.id) === true;
+/** True only for families whose complete profile snapshot maps losslessly to ProfileState. */
+export function supportsProfileState(device: DeviceMetadata): boolean {
+  return hasVerifiedDriver(device)
+    && DRIVER_CAPABILITIES.get(device.routerId)?.profileState === true;
+}
+
+/** Expose only vendor features that also have a safe app-level command adapter. */
+export function availableCapabilities(device: DeviceMetadata): DeviceCapabilities {
+  const available = hasVerifiedDriver(device);
+  const driver = DRIVER_CAPABILITIES.get(device.routerId);
+  const lighting = available && driver?.lighting === true && device.capabilities.lighting;
+  const snapTap = available && driver?.snapTap === true && device.capabilities.snapTap;
+  return {
+    lighting,
+    customLighting: available && driver?.customLighting === true && device.capabilities.customLighting,
+    keybindings: available && driver?.keybindings === true && device.capabilities.keybindings,
+    fnLayer: available && driver?.fnLayer === true && device.capabilities.fnLayer,
+    snapTap,
+    macros: available && driver?.macros === true && device.capabilities.macros,
+    performance: available && driver?.performance === true && device.capabilities.performance,
+    profiles: available && driver?.profiles === true && device.capabilities.profiles,
+    maxSnapTapPairs: snapTap ? device.capabilities.maxSnapTapPairs : 0,
+    lightingEffects: lighting ? device.capabilities.lightingEffects : [],
+    // Separate media/sync/actuation APIs are intentionally not exposed yet.
+    tft: false,
+    sync: false,
+    actuation: false,
+  };
 }
 
 /** Build a disconnected browser preview from the same metadata as native HID. */
@@ -101,7 +130,7 @@ export function previewDevice(device: DeviceMetadata): DeviceSummary {
     protocol: device.routerId,
     connected: false,
     profiles: device.profiles,
-    activeProfile: verified ? device.defaultProfile : 0,
+    activeProfile: supportsProfileState(device) ? device.defaultProfile : 0,
     capabilities: availableCapabilities(device),
     advertisedCapabilities: device.capabilities,
   };
