@@ -1,8 +1,5 @@
 # Changelog
-
-Sem piš krátké změny, které mají uživatelé vidět v okně aktualizace.
-
-Při vydání nové verze přidej novou sekci nad předchozí verzi. Číslo musí odpovídat `version` v `package.json`.
+ Číslo musí odpovídat `version` v `package.json`.
 
 Příklad:
 
@@ -16,6 +13,6 @@ Příklad:
 
 ## 0.4.2
 
-- Vydávání nových verzí bylo zjednodušeno pro práci přímo z VS Code.
+- Vydávání nových verzí bylo zjednodušeno.
 - Změna `version` v `package.json` automaticky synchronizuje verzi aplikace a vytvoří odpovídající GitHub tag a Release.
 - Veřejný Release obsahuje jediný Windows setup EXE, který používá také vestavěný updater.
