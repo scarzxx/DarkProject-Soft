@@ -121,10 +121,15 @@ fn witmod_hardware_name(bytes: &[u8]) -> Option<String> {
 }
 
 fn witmod_block(device: &HidDevice, expected_index: u8) -> Option<Vec<u8>> {
+    // The vendor waits roughly 500 ms after command 13. Poll for up to two seconds
+    // per block so a normal delayed response is not mistaken for an absent device.
     for _ in 0..8 {
         let mut data = vec![0u8; 128];
         let length = device.read_timeout(&mut data, 250).ok()?;
-        if length == 0 || length > data.len() {
+        if length == 0 {
+            continue;
+        }
+        if length > data.len() {
             return None;
         }
         data.truncate(length);
