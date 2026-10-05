@@ -46,6 +46,9 @@ test("main and release workflows publish EXE-only Windows artifacts without sign
   assert.match(release, /softprops\/action-gh-release@v3/);
   assert.match(release, /Dark-Control-\$tag-Windows-x64-setup\.exe/);
   assert.match(release, /files: release\/\*\.exe/);
+  assert.match(release, /body_path: release-notes\.md/);
+  assert.match(release, /extract-release-notes\.mjs/);
+  assert.doesNotMatch(release, /generate_release_notes/);
   assert.doesNotMatch(release, /\.msi/);
   assert.doesNotMatch(release, /SHA256SUMS\.txt/);
   assert.doesNotMatch(release, /TAURI_SIGNING_PRIVATE_KEY/);
@@ -66,7 +69,7 @@ test("package.json is the only version users need to edit for a release", () => 
   assert.match(sync, /package\.json is the single version the user edits in VS Code/);
   assert.match(sync, /package-lock\.json/);
   assert.match(build, /node scripts\/release-version\.mjs/);
-  assert.match(release, /paths:\s*\n\s*- "package\.json"/);
+  assert.match(release, /paths:[\s\S]*"package\.json"[\s\S]*"CHANGELOG\.md"/);
   assert.match(release, /Create release tag/);
   assert.match(release, /git push origin \$tag/);
 });
