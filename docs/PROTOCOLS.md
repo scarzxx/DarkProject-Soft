@@ -1,15 +1,8 @@
 # HID drivers and vendor evidence
 
-Seven router families have independent Rust packet codecs. Only the existing
-Bushido ANSI / Common model is hardware verified. Packet equivalence is not
-hardware verification: the other 44 models remain blocked by `open`, even though
-their family now has an implementation.
+Dark Control contains independent Rust packet codecs for all seven keyboard router families found in the supplied Dark Project configurator data. All 45 canonical keyboard records in the current vendor registry are treated as **supported models** when their identity and exact HID collection can be resolved. Runtime support is based on the vendor device registry, packet behavior and checked reference vectors; the application does not expose a separate verified/unverified product status.
 
-The two supplied `main.67f2a4ad434666c9*.js` files are identical. Their SHA-256 is
-`92e38419a4f30f24fb09dbd9dc5da91f2ed637682dc48a65ef2689448d405b46`.
-Webpack module 8967 exports the audited families through L8, iH, IF, $h, ze, vx
-and Yo respectively. These names identify the external oracle; vendor source
-code is not stored in this repository or compiled into the application.
+The two supplied `main.67f2a4ad434666c9*.js` files are identical. Their SHA-256 is `92e38419a4f30f24fb09dbd9dc5da91f2ed637682dc48a65ef2689448d405b46`. Webpack module 8967 exports the audited families through L8, iH, IF, $h, ze, vx and Yo respectively. These names identify the external oracle; vendor source code is not stored in this repository or compiled into the application.
 
 ## Implemented packet operations
 
@@ -23,129 +16,52 @@ code is not stored in this repository or compiled into the application.
 | HFDKBSeries | Output/Input 0; selected feature reads | Version, lighting | Effects, complete base/Fn tables, complete ordered macro table, Snap Tap over a supplied base table and known matrix |
 | HFDKBRGBSeries | Output/Input 0 with acknowledgements | Version, lighting, game/Snap status, base/Fn rows, custom colors, whole macro storage | Effects, custom RGB, complete base/Fn tables, complete ordered macro table, Snap Tap status and bindings over a supplied base table |
 
-`vendor::Request` expresses family-native operations. Raw binding rows keep their
-family bytes; they are not reinterpreted as Common's `RawKeyBinding.kind`.
-Whole buffers must already use the model's vendor matrix. `registry/protocol-wire.json`
-contains model identities, LED/key slot names, their vendor HID usages and literal
-button defaults. A missing mapping stays missing; visual layout indices never
-substitute for a packet matrix.
+`vendor::Request` expresses family-native operations. Raw binding rows keep their family bytes; they are not reinterpreted as Common's `RawKeyBinding.kind`. Whole buffers must already use the model's vendor matrix. `registry/protocol-wire.json` contains model identities, LED/key slot names, vendor HID usages and literal button defaults. A missing mapping stays missing; visual layout indices never substitute for a packet matrix.
 
-The existing `ProtocolDriver` commands still serve Bushido. Another family's full
-snapshot cannot be represented faithfully by Common's mandatory performance
-fields, single-key patch or standalone macro ID. Those adapters return
-`unsupported/unverified`; individual native reads and complete-table writes are
-available internally through `vendor_request`, without inventing performance
-defaults or silently overwriting other macros. No Tauri command exposes a raw or
-ungated `vendor_request` transport.
+## Runtime support model
 
-## Runtime integration and safety gates
+A keyboard is supported when it resolves to a canonical registry model, its VID/PID and HID collection match vendor metadata, and its `routerID` has an implemented driver. The old generated `verified` field is retained only as source metadata for fixture compatibility and is not used as a runtime gate.
 
-The native device registry now consumes the vendor HID collections (`usagePage`
-and `usage`) in addition to VID/PID and model identity. Production `open()` refuses
-a HID path whose collection does not match the selected model. Discovery is also
-restricted to exact known VID/PID pairs unless the USB product string is strongly
-Dark Project branded. This prevents an unrelated device from becoming a candidate
-merely because it shares a vendor ID.
+`registry/driver-capabilities.json` is the shared frontend/backend source of truth for app-level feature adapters. A supported model can open its family driver; each page or write action is still exposed only when both the vendor capability and the corresponding app adapter exist. This distinction matters because several families use complete tables or family-specific state instead of Common's single-key/profile model.
 
-Ambiguous Witmod devices can use the vendor identity query only after the user
-selects that HID path. The query sends output report 1 with command 13, receives
-the ordered two-block identity response, extracts the second-last comma-separated
-hardware-name field and resolves it against the registry. This is an identity
-probe only; it does not send a configuration write. Passive enumeration itself
-still sends no HID reports.
+Common exposes its lossless `ProfileState`. Non-Common families use the family-neutral `FeatureState` for app reads. The initial UI adapters expose lighting for the six additional families and Snap Tap where the family transaction maps cleanly to the existing editor. Family-native table operations remain implemented behind the driver boundary but are not silently forced through an incompatible Common editor. Unknown identities, ambiguous identities and operations without an app adapter remain blocked.
 
-`registry/driver-capabilities.json` is the shared frontend/backend source of truth
-for app-level adapters. A model must be individually `verified`, belong to a known
-router and have the corresponding safe adapter before a capability is usable.
-Vendor-advertised capabilities remain available separately for the UI, but they do
-not grant transport access or expose a write path by themselves.
+The native registry consumes vendor HID `usagePage` and `usage` in addition to VID/PID and model identity. `open()` refuses a HID path whose collection does not match the selected model. Discovery is restricted to exact known VID/PID pairs unless the product string is strongly Dark Project branded, preventing unrelated devices from becoming candidates merely because they share a vendor ID.
 
-Common still exposes its lossless `ProfileState`. Non-Common families instead use
-the family-neutral `FeatureState` Tauri command. The initial adapters expose only
-operations that already map cleanly to the existing UI without destructive table
-semantics: lighting for the six additional families, plus Snap Tap for DPONE and
-Witmod. Single-key patches, standalone macro writes, profile switching and other
-whole-table operations stay hidden until a safe family-specific editor/adapter is
-implemented. A failed initial read disables writes in the UI until a successful
-reload.
+Ambiguous Witmod devices can use the vendor identity query after selection. It sends output report 1 with command 13, receives the ordered two-block identity response, extracts the second-last comma-separated hardware-name field and resolves it against the registry. This query identifies the model and is not a configuration write. Passive enumeration sends no HID reports.
 
-## Explicit limits and ambiguities
+## Startup consent
 
-- ALU85A has no matching packet matrix in the supplied bundle. Key-slot-dependent
-  operations are unsupported for this model.
-- TFT/HFD key read routines do not decode a binding table. Their generic macro
-  read routines use a format inconsistent with the actual writer. These readers
-  are unsupported. TFT advertises Snap Tap but has no corresponding family method.
-- HFD and HFD RGB have empty `ApplyTimeSyns` methods. Clock synchronization is
-  unsupported; the unused raw time payload is not treated as a complete transaction.
-  DPONE/TFT clock writes preserve their prepare/time/finish sequence.
-- Witmod has duplicate lighting wire IDs, including Random/Solid/Sine. Readback
-  preserves the vendor's first-match choice rather than guessing an effect.
-  Its custom colors have no implemented vendor readback. Sparse macro tables are
-  unsupported because the vendor clears by table length rather than highest ID.
-- The HFD RGB custom writer allocates 504 bytes, even though model matrices have
-  128 slots. Colors outside its 126 writable records are unsupported. Its status
-  writer uses payload byte 8 while the status reader uses byte 7; both offsets are
-  preserved, not repaired speculatively. Left/right read and write directions also
-  differ and remain as supplied.
-- Sparklink maps M19/M20 to the same wire ID. Direction readback is reversed and
-  remains reversed. Snap Tap ignores the vendor enable flag and transmits only
-  ten pairs before its checksum becomes undefined; disable and larger transitions
-  are unsupported. A transition requires the prior pairs, and cleanup must fit the
-  single vendor packet. Macros require a target key, not just a macro slot.
-- Macro events currently represent keyboard keys. Unsupported mouse/compound
-  records are rejected rather than reinterpreted. Some vendor macro decoders drop
-  delay high bytes; the decoders preserve that behavior and vectors demonstrate it.
-- Performance, generic profile switching, TFT screen/media upload, advanced
-  actuation and calibration APIs are unsupported/unverified. They are not exposed
-  through a guessed fallback driver. Firmware, bootloader and factory-reset
-  operations do not exist in the request enum or oracle allowlist.
+Before Dark Control scans or opens HID devices, the user must explicitly accept the startup risk notice. The notice states that Dark Control is unofficial community software, is not published or supported by Dark Project, communicates directly with keyboard firmware, may change device settings, and is used at the user's own risk. A checkbox must be selected before the Continue button is enabled. The notice is available in Czech, Slovak and English and is shown again on the next application launch.
+
+The consent screen is a product safety notice, not a technical permission bypass. Exact identity checks, interface checks and per-operation capability gates remain active after consent.
+
+## Explicit protocol limits
+
+- ALU85A has no matching packet matrix in the supplied bundle. Key-slot-dependent operations are unavailable for this model instead of inventing a mapping.
+- TFT/HFD key read routines do not decode a binding table. Their generic macro read routines use a format inconsistent with the actual writer. TFT advertises Snap Tap but has no corresponding family method in the audited implementation.
+- HFD and HFD RGB have empty `ApplyTimeSyns` methods. Clock synchronization is not exposed; DPONE/TFT clock writes preserve their prepare/time/finish sequence.
+- Witmod has duplicate lighting wire IDs, including Random/Solid/Sine. Readback preserves the vendor first-match behavior. Its custom colors have no implemented vendor readback. Sparse macro tables cannot be treated like independent macro slots because the vendor clears by table length.
+- The HFD RGB custom writer allocates 504 bytes although model matrices have 128 slots. Colors outside its 126 writable records are not exposed. Its status writer uses payload byte 8 while the reader uses byte 7; both offsets are preserved rather than speculatively repaired.
+- SparkLink maps M19/M20 to the same wire ID. Direction readback is reversed and remains as supplied. Snap Tap has vendor-specific transition constraints and macros require a target key rather than only a macro slot.
+- Macro events currently represent keyboard keys. Mouse/compound records that cannot be represented by the current editor are not reinterpreted.
+- TFT screen/media upload, advanced actuation/calibration, firmware update, bootloader entry and factory reset are not exposed by Dark Control.
 
 ## Transport and validation
 
-`HidTransport` provides feature send/receive, output write, timed input read and
-delay. Its `HidDevice` implementation delegates directly to hidapi. Common's
-only refactor is transport injection: packet logic, errors, report lengths,
-legacy delays and fallback behavior remain under the original source fingerprint.
+`HidTransport` provides feature send/receive, output write, timed input read and delay. Its `HidDevice` implementation delegates directly to hidapi. Common's packet behavior remains under its compatibility fingerprint; the refactor adds transport injection without replacing its established packet logic.
 
-Native writes include the report-ID prefix. Input reports remove a numbered
-report-ID prefix before the family decoder; feature responses retain the bytes
-returned by the OS. These conventions follow the [hidapi API](https://github.com/libusb/hidapi/blob/master/hidapi/hidapi.h)
-and [WebHID report rules](https://wicg.github.io/webhid/#dom-hiddevice-receivefeaturereport).
-Cross-platform physical framing for unverified models still needs hardware tests.
+Native writes include the report-ID prefix. Input reports remove a numbered report-ID prefix before family decoding; feature responses retain the bytes returned by the OS. Transactions enforce response bounds, headers, multipart order, terminal blocks and short-write errors. Input waits are bounded, acknowledgement retries follow vendor timing, and failures propagate instead of becoming fabricated success states.
 
-Transactions enforce response bounds, headers, multipart order, terminal blocks
-and short-write errors. Input waits use a three-second safety limit. HFD RGB
-acknowledgements retry twice with the vendor ten-millisecond interval. TFT version
-reads preserve their conditional prepare/ack/data/finish flow. Errors propagate;
-they never become a successful write or a fabricated state.
-
-The discrete Rust tests use a queue-driven mock transport for short replies,
-missing blocks, wrong report IDs, out-of-order blocks, failed writes, disconnects,
-acknowledgement retries, unsupported operations and unknown identities. Disabled
-app-level adapters are also tested to fail before creating a HID transport event.
+The Rust tests use a queue-driven mock transport for short replies, missing blocks, wrong report IDs, out-of-order blocks, failed writes, disconnects, acknowledgement retries, unsupported operations and unknown identities. App-level adapters are also tested so unavailable operations fail before creating a configuration transport event.
 
 ## Golden vectors
 
-`tests/fixtures/vendor-protocol-vectors.json` contains 1,059 cases produced by
-executing allowlisted methods from the fingerprinted external bundle against a
-WebHID mock. Each case records inputs, report IDs, complete payloads, synthetic
-responses, delays and decoded values. HFD RGB's packet/decoder methods are real;
-its asynchronous acknowledgement queue is replaced by the harness. Rust tests
-separately exercise the native acknowledgement transport. No fixture pretends to
-be a physical capture.
+`tests/fixtures/vendor-protocol-vectors.json` contains 1,059 cases produced by executing allowlisted methods from the fingerprinted external bundle against a WebHID mock. Each case records inputs, report IDs, complete payloads, synthetic responses, delays and decoded values. These vectors establish packet equivalence with the audited vendor implementation; they are not physical USB captures.
 
-Binding-write vectors provide complete native byte rows to the vendor packet
-methods. They validate packing and transmission, not a new binding editor's
-translation of every vendor function kind. DPONE reads first query the version
-to determine the response offset, as in vendor initialization.
+Binding-write vectors provide complete native byte rows to the vendor packet methods. They validate packing and transmission, not an invented translation of every vendor function kind. DPONE reads first query the version to determine the response offset, matching vendor initialization.
 
-The Common lighting cases supply the already-preserved vendor control bytes and
-translate its legacy clockwise input convention before calling the vendor oracle.
-Common's established timing is kept, including differences from the vendor UI.
-Packet equality and unchanged behavior are separate assertions.
-
-Regenerate from the external file, while in the repository root:
+Regenerate from the external file while in the repository root:
 
 ```powershell
 npm run protocol:oracle -- 'C:\Users\scarz\Desktop\main.67f2a4ad434666c9.js'
@@ -154,8 +70,4 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-The oracle refuses other source fingerprints before evaluation. It has no device,
-network or filesystem API inside its evaluation context. Only technical JSON data
-and byte vectors are written. Local Node tests also re-run the external oracle and
-compare every vector and matrix; CI skips that one reproduction test when the
-proprietary external file is unavailable, while always running the Rust vectors.
+The oracle refuses other source fingerprints before evaluation. It has no device, network or filesystem API inside its evaluation context. Only technical JSON data and byte vectors are written. Local Node tests can reproduce the external oracle when the proprietary bundle is present; CI skips that reproduction step when the external file is intentionally absent while always running the checked-in Rust vectors.
