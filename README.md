@@ -25,12 +25,13 @@ Modern desktop configurator for supported **Dark Project** keyboards. Version **
 - searchable keyboard picker with layout and support information
 - all four normalized vendor JSON tables imported from the supplied data ZIP
 - optional close to tray, immediate hide button and localized open/exit menu
-- signed in-app updater with automatic/manual checks in Settings for release builds
+- GitHub Releases updater with automatic/manual checks in Settings
 - first-launch notice with remembered consent across restarts
 
 In Settings, choose language and appearance, configure **Close to tray**, and manage
 updates. Automatic update checks default to on and stay silent when no update is
-available. Release builds verify the update signature before installation.
+available. The app checks the latest public GitHub Release and can download and launch
+its Windows setup EXE directly; no updater signing keys are required.
 
 Rebuild application metadata from the preserved generated tables:
 
@@ -108,10 +109,11 @@ npm run release:version -- 0.4.1
 npm install
 ```
 
-Push the matching `v0.4.1` tag to run the signed release workflow. The workflow
-creates MSI/NSIS bundles, updater signatures and `latest.json`, then publishes the
-GitHub Release. One-time signing-key setup and the private-repository limitation are
-documented in [docs/UPDATES.md](docs/UPDATES.md).
+Push the matching `v0.4.1` tag to run the release workflow. The workflow builds the
+portable EXE, MSI and NSIS setup EXE, writes `SHA256SUMS.txt`, and publishes all of
+them as a normal GitHub Release. No Tauri updater key pair or signing secrets are
+needed. The repository must be public for installed apps to check releases without
+embedding a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
 
 ## Safety
 
