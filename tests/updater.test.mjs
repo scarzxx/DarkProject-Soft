@@ -36,15 +36,18 @@ test("native updater only launches installers from this repository's GitHub Rele
   assert.ok(!capability.permissions.includes("updater:default"));
 });
 
-test("main builds Windows artifacts and tags publish ordinary GitHub Releases without signing keys", () => {
+test("main and release workflows publish EXE-only Windows artifacts without signing keys", () => {
   const build = read(".github/workflows/build.yml");
   const release = read(".github/workflows/release.yml");
-  assert.match(build, /--bundles msi,nsis/);
+  assert.match(build, /--bundles nsis/);
   assert.match(build, /src-tauri\/target\/release\/dark-control\.exe/);
-  assert.match(build, /actions\/upload-artifact@v4/);
+  assert.match(build, /bundle\/nsis\/\*\.exe/);
+  assert.doesNotMatch(build, /bundle\/msi/);
   assert.match(release, /softprops\/action-gh-release@v3/);
   assert.match(release, /Dark-Control-\$tag-Windows-x64-setup\.exe/);
-  assert.match(release, /SHA256SUMS\.txt/);
+  assert.match(release, /files: release\/\*\.exe/);
+  assert.doesNotMatch(release, /\.msi/);
+  assert.doesNotMatch(release, /SHA256SUMS\.txt/);
   assert.doesNotMatch(release, /TAURI_SIGNING_PRIVATE_KEY/);
   assert.doesNotMatch(release, /TAURI_SIGNING_PUBLIC_KEY/);
   assert.doesNotMatch(release, /createUpdaterArtifacts/);
