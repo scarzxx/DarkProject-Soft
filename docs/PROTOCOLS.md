@@ -16,15 +16,36 @@ The two supplied `main.67f2a4ad434666c9*.js` files are identical. Their SHA-256 
 | HFDKBSeries | Output/Input 0; selected feature reads | Version, lighting | Effects, complete base/Fn tables, complete ordered macro table, Snap Tap over a supplied base table and known matrix |
 | HFDKBRGBSeries | Output/Input 0 with acknowledgements | Version, lighting, game/Snap status, base/Fn rows, custom colors, whole macro storage | Effects, custom RGB, complete base/Fn tables, complete ordered macro table, Snap Tap status and bindings over a supplied base table |
 
-`vendor::Request` expresses family-native operations. Raw binding rows keep their family bytes; they are not reinterpreted as Common's `RawKeyBinding.kind`. Whole buffers must already use the model's vendor matrix. `registry/protocol-wire.json` contains model identities, LED/key slot names, vendor HID usages and literal button defaults. A missing mapping stays missing; visual layout indices never substitute for a packet matrix.
+`vendor::Request` expresses family-native operations. Whole buffers always use the model's vendor matrix. `registry/protocol-wire.json` contains model identities, LED/key slot names, vendor HID usages and literal button defaults. A missing mapping stays missing; visual layout indices never substitute for a packet matrix.
 
 ## Runtime support model
 
 A keyboard is supported when it resolves to a canonical registry model, its VID/PID and HID collection match vendor metadata, and its `routerID` has an implemented driver. The old generated `verified` field is retained only as source metadata for fixture compatibility and is not used as a runtime gate.
 
-`registry/driver-capabilities.json` is the shared frontend/backend source of truth for app-level feature adapters. A supported model can open its family driver; each page or write action is still exposed only when both the vendor capability and the corresponding app adapter exist. This distinction matters because several families use complete tables or family-specific state instead of Common's single-key/profile model.
+`registry/driver-capabilities.json` is the shared frontend/backend source of truth for app-level feature adapters. A supported model can open its family driver; each page or write action is exposed only when both the vendor capability and the corresponding app adapter exist.
 
-Common exposes its lossless `ProfileState`. Non-Common families use the family-neutral `FeatureState` for app reads. The initial UI adapters expose lighting for the six additional families and Snap Tap where the family transaction maps cleanly to the existing editor. Family-native table operations remain implemented behind the driver boundary but are not silently forced through an incompatible Common editor. Unknown identities, ambiguous identities and operations without an app adapter remain blocked.
+Common exposes its lossless `ProfileState`. Non-Common families read family-native feature/table state and the frontend merges those exact reads with inert vendor defaults only for fields that the family does not expose. Hardware-derived lighting, Snap Tap, bindings and macros remain distinguishable at the adapter boundary; the UI does not invent packet bytes from visual key order.
+
+### Keybinding editor adapters
+
+The existing Keybindings page now uses family-native read/modify/write adapters where the audited implementation provides lossless readback:
+
+- **DPONE:** base-layer rows are read first, the selected two-byte record is changed, then the complete 512-byte vendor buffer is written. FN remains gated because the vendor implementation has a writer but no corresponding lossless FN table readback.
+- **Witmod:** Base and FN four-byte tables are read, the exact vendor record is changed, and the complete table is written back. Keyboard, disabled and macro records preserve the vendor byte layout.
+- **SparkLink:** Base and FN1 rows are read for the editor. A key change writes the family-native source-key record instead of synthesizing a Common table. Independent macro IDs are not offered because SparkLink macros are bound-key transactions.
+- **HFD RGB:** Base and FN rows are read, the selected record is changed, the complete 512-byte table is preserved and written back. A key currently carrying a Snap Tap record is rejected rather than leaving half of a hardware pair behind.
+
+For every adapter, the protocol slot is resolved through the exact vendor key/LED code and `layouts.json` slot map. This is intentionally separate from the visual array index and preserves the existing Bushido rule that visual order is not packet order. Vendor action types that the common editor cannot represent are read as opaque/unknown records and are left untouched until the user explicitly replaces that key with a supported action.
+
+TFT and non-RGB HFD still keep their whole-table key writers behind the driver boundary. Their audited vendor methods do not provide a lossless current-table decoder, so exposing a one-key edit would silently replace unrelated hardware mappings with defaults. The startup risk notice is not used as justification for a destructive hidden reset.
+
+### Macro editor adapters
+
+- **DPONE:** each native macro slot can be read and written independently; UI macro IDs 1..10 map to native slots 0..9.
+- **Witmod:** saving one macro first reads all ten slots, patches the selected slot, then writes a dense ten-slot table. This prevents the vendor writer's trailing-slot clearing behavior from deleting unrelated macros.
+- **HFD RGB:** the complete macro storage is read, the selected dense slot is patched, and the complete ordered table is rewritten. Sparse writes and destructive gaps are rejected.
+- **SparkLink:** remains gated in the standalone Macro page because its macro data must be committed together with an explicit target key.
+- **TFT/HFD:** remain gated until the app has a trustworthy current macro-table source; the packet writers themselves remain implemented and covered by vendor vectors.
 
 The native registry consumes vendor HID `usagePage` and `usage` in addition to VID/PID and model identity. `open()` refuses a HID path whose collection does not match the selected model. Discovery is restricted to exact known VID/PID pairs unless the product string is strongly Dark Project branded, preventing unrelated devices from becoming candidates merely because they share a vendor ID.
 

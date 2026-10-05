@@ -372,7 +372,9 @@ mod tests {
         assert!(!features.profile_state);
         assert!(features.lighting);
         assert!(features.snap_tap);
-        assert!(!features.keybindings);
+        assert!(features.keybindings);
+        assert!(features.fn_layer);
+        assert!(features.macros);
         assert!(driver_features("CommonKeyboardSeries").unwrap().profile_state);
         assert!(driver_features("UnexpectedSeries").is_none());
     }

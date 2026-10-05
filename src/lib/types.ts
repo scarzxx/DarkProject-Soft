@@ -72,11 +72,6 @@ export interface SnapTapState {
   pairs: SnapPair[];
 }
 
-export interface FeatureState {
-  lighting: LightingFeatureState | null;
-  snapTap: SnapTapState | null;
-}
-
 export interface RawKeyBinding {
   slot: number;
   code: number;
@@ -92,6 +87,14 @@ export interface MacroEvent {
 export interface MacroDefinition {
   id: number;
   events: MacroEvent[];
+}
+
+export interface FeatureState {
+  lighting: LightingFeatureState | null;
+  snapTap: SnapTapState | null;
+  keyBindings: RawKeyBinding[] | null;
+  fnKeyBindings: RawKeyBinding[] | null;
+  macros: MacroDefinition[] | null;
 }
 
 export interface ProfileState {

@@ -1,6 +1,7 @@
 #[allow(dead_code)]
 mod common;
 mod dpone;
+mod editor;
 #[cfg(test)]
 mod golden_tests;
 mod hfd;
@@ -114,6 +115,9 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
                 enabled: state.snap_tap_enabled,
                 pairs: state.snap_tap_pairs,
             }),
+            key_bindings: Some(state.key_bindings),
+            fn_key_bindings: Some(state.fn_key_bindings),
+            macros: Some(state.macros),
         })
     }
     fn read_profile(&self, profile: u8) -> Result<ProfileState, String> {
@@ -246,7 +250,28 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
         } else {
             None
         };
-        Ok(FeatureState { lighting, snap_tap })
+        let key_bindings = if capabilities.keybindings {
+            Some(editor::read_bindings(self, 0)?)
+        } else {
+            None
+        };
+        let fn_key_bindings = if capabilities.fn_layer {
+            Some(editor::read_bindings(self, 1)?)
+        } else {
+            None
+        };
+        let macros = if capabilities.macros {
+            Some(editor::read_macros(self)?)
+        } else {
+            None
+        };
+        Ok(FeatureState {
+            lighting,
+            snap_tap,
+            key_bindings,
+            fn_key_bindings,
+            macros,
+        })
     }
     fn read_profile(&self, _profile: u8) -> Result<ProfileState, String> {
         vendor::unsupported(
@@ -288,16 +313,24 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
     }
     fn apply_key_binding(
         &self,
-        _profile: u8,
-        _layer: u8,
-        _patch: &RawKeyBinding,
+        profile: u8,
+        layer: u8,
+        patch: &RawKeyBinding,
     ) -> Result<(), String> {
-        vendor::unsupported("Common single-key patch is not a complete family-native key table")
+        let capabilities = crate::registry::usable_capabilities(self.metadata);
+        if !capabilities.keybindings || (layer == 2 && !capabilities.fn_layer) {
+            return vendor::unsupported("keybinding adapter for this family/model");
+        }
+        if profile != 0 {
+            return vendor::unsupported("nonzero family-native profile");
+        }
+        editor::apply_binding(self, layer, patch)
     }
-    fn write_macro(&self, _id: u8, _events: &[MacroEvent]) -> Result<(), String> {
-        vendor::unsupported(
-            "standalone macro writes are not exposed until the family table semantics are supported",
-        )
+    fn write_macro(&self, macro_id: u8, events: &[MacroEvent]) -> Result<(), String> {
+        if !crate::registry::usable_capabilities(self.metadata).macros {
+            return vendor::unsupported("macro adapter for this family/model");
+        }
+        editor::write_macro(self, macro_id, events)
     }
 }
 

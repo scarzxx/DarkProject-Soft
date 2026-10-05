@@ -61,14 +61,41 @@ test("all known models are supported while feature exposure stays family-specifi
     assert.equal(preview.styleName, device.styleName);
     assert.equal(preview.advertisedCapabilities, device.capabilities);
   }
+
   const witmod = registry.DEVICE_REGISTRY.find((device) => device.routerId === "WitmodSeries");
   const witmodPreview = registry.previewDevice(witmod);
   assert.equal(registry.supportsProfileState(witmod), false);
   assert.equal(witmodPreview.capabilities.lighting, witmod.capabilities.lighting);
   assert.equal(witmodPreview.capabilities.snapTap, witmod.capabilities.snapTap);
-  assert.equal(witmodPreview.capabilities.keybindings, false);
-  assert.equal(witmodPreview.capabilities.macros, false);
+  assert.equal(witmodPreview.capabilities.keybindings, witmod.capabilities.keybindings);
+  assert.equal(witmodPreview.capabilities.fnLayer, witmod.capabilities.fnLayer);
+  assert.equal(witmodPreview.capabilities.macros, witmod.capabilities.macros);
   assert.equal(witmodPreview.capabilities.profiles, false);
+
+  const dpone = registry.DEVICE_REGISTRY.find((device) => device.routerId === "DponeSeries");
+  const dponePreview = registry.previewDevice(dpone);
+  assert.equal(dponePreview.capabilities.keybindings, dpone.capabilities.keybindings);
+  assert.equal(dponePreview.capabilities.fnLayer, false);
+  assert.equal(dponePreview.capabilities.macros, dpone.capabilities.macros);
+
+  const spark = registry.DEVICE_REGISTRY.find((device) => device.routerId === "SparkLinkSeries");
+  const sparkPreview = registry.previewDevice(spark);
+  assert.equal(sparkPreview.capabilities.keybindings, spark.capabilities.keybindings);
+  assert.equal(sparkPreview.capabilities.fnLayer, spark.capabilities.fnLayer);
+  assert.equal(sparkPreview.capabilities.macros, false);
+
+  const hfdRgb = registry.DEVICE_REGISTRY.find((device) => device.routerId === "HFDKBRGBSeries");
+  const hfdRgbPreview = registry.previewDevice(hfdRgb);
+  assert.equal(hfdRgbPreview.capabilities.keybindings, hfdRgb.capabilities.keybindings);
+  assert.equal(hfdRgbPreview.capabilities.fnLayer, hfdRgb.capabilities.fnLayer);
+  assert.equal(hfdRgbPreview.capabilities.macros, hfdRgb.capabilities.macros);
+
+  for (const family of ["TFTKeyboardSeries", "HFDKBSeries"]) {
+    const device = registry.DEVICE_REGISTRY.find((item) => item.routerId === family);
+    const preview = registry.previewDevice(device);
+    assert.equal(preview.capabilities.keybindings, false);
+    assert.equal(preview.capabilities.macros, false);
+  }
 
   const bushido = registry.DEVICE_REGISTRY.find((device) => device.productName === "DPKB_BUSHIDO_87_ANSI");
   assert.equal(registry.supportsProfileState(bushido), true);

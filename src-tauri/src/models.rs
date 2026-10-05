@@ -92,6 +92,9 @@ pub struct SnapTapState {
 pub struct FeatureState {
     pub lighting: Option<LightingFeatureState>,
     pub snap_tap: Option<SnapTapState>,
+    pub key_bindings: Option<Vec<RawKeyBinding>>,
+    pub fn_key_bindings: Option<Vec<RawKeyBinding>>,
+    pub macros: Option<Vec<MacroDefinition>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,7 +113,7 @@ pub struct MacroEvent {
     pub pressed: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MacroDefinition {
     pub id: u8,

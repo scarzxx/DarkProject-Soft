@@ -59,6 +59,9 @@ export async function readFeatures(profile: number, deviceId?: string): Promise<
   return {
     lighting: state.lighting,
     snapTap: { enabled: state.snapTapEnabled, pairs: state.snapTapPairs },
+    keyBindings: state.keyBindings,
+    fnKeyBindings: state.fnKeyBindings,
+    macros: state.macros,
   };
 }
 
@@ -67,14 +70,40 @@ export async function readProfile(profile: number, deviceId?: string): Promise<P
   return result ?? getDefaultProfile(requirePreviewDevice(deviceId).registryId!, profile);
 }
 
-/** Pick the lossless full-profile API only for families that explicitly support it. */
+/**
+ * Common devices expose a complete ProfileState directly. Other families expose
+ * lossless feature/table reads; merge those with inert vendor defaults so the
+ * same editors can render without pretending unsupported fields came from HID.
+ */
 export async function readDeviceState(device: DeviceSummary, profile: number): Promise<EditableDeviceState> {
   const metadata = getDeviceMetadata(device.registryId);
   if (!metadata) throw new Error("Selected device identity is unknown");
   if (supportsProfileState(metadata)) {
     return { profileState: await readProfile(profile, device.id), features: null };
   }
-  return { profileState: null, features: await readFeatures(profile, device.id) };
+  const [features, defaults] = await Promise.all([
+    readFeatures(profile, device.id),
+    getDefaultProfile(metadata.id, profile),
+  ]);
+  const lighting = features.lighting
+    ? {
+        ...features.lighting,
+        color: features.lighting.color ?? defaults.lighting.color,
+      }
+    : defaults.lighting;
+  return {
+    profileState: {
+      profile,
+      lighting,
+      performance: defaults.performance,
+      snapTapEnabled: features.snapTap?.enabled ?? defaults.snapTapEnabled,
+      snapTapPairs: features.snapTap?.pairs ?? defaults.snapTapPairs,
+      keyBindings: features.keyBindings ?? defaults.keyBindings,
+      fnKeyBindings: features.fnKeyBindings ?? defaults.fnKeyBindings,
+      macros: features.macros ?? defaults.macros,
+    },
+    features: null,
+  };
 }
 
 export async function switchProfile(profile: number, deviceId?: string): Promise<void> {
