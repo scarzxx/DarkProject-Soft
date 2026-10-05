@@ -21,7 +21,12 @@ if (!fs.existsSync(changelogPath)) {
 
 const changelog = fs.readFileSync(changelogPath, "utf8");
 const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const heading = new RegExp(`^##\\s+(?:\\[)?v?${escaped}(?:\\])?(?:\\s+-\\s+.*)?\\s*$`, "mi");
+// Keep the heading match on one physical line. Using \s here would also consume
+// the first changelog bullet because newlines are whitespace in JavaScript regexes.
+const heading = new RegExp(
+  `^##[ \\t]+(?:\\[)?v?${escaped}(?:\\])?(?:[ \\t]+-[ \\t]+[^\\r\\n]*)?[ \\t]*\\r?$`,
+  "mi",
+);
 const match = heading.exec(changelog);
 
 if (!match) {
@@ -31,7 +36,7 @@ if (!match) {
 }
 
 const afterHeading = changelog.slice(match.index + match[0].length);
-const nextHeading = afterHeading.search(/^##\s+/m);
+const nextHeading = afterHeading.search(/^##[ \\t]+/m);
 const body = (nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading).trim();
 
 if (!body) {
