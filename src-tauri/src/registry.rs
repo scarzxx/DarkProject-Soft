@@ -87,9 +87,12 @@ pub fn connection_matches(device: &DeviceMetadata, vendor_id: u16, product_id: u
 /// Match the exact HID collection declared by vendor metadata for this model.
 pub fn interface_matches(device: &DeviceMetadata, usage_page: u16, usage: u16) -> bool {
     device.interfaces.iter().any(|interface| {
-        let transport_ok = interface.transport.as_deref().map_or(true, |transport| {
-            transport.eq_ignore_ascii_case("USB") || transport.eq_ignore_ascii_case("DONGLE")
-        });
+        let transport_ok = match interface.transport.as_deref() {
+            None => true,
+            Some(transport) => {
+                transport.eq_ignore_ascii_case("USB") || transport.eq_ignore_ascii_case("DONGLE")
+            }
+        };
         transport_ok && interface.usage_page == usage_page && interface.usage == usage
     })
 }
