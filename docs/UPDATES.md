@@ -28,13 +28,12 @@ Once the repository is public, no additional updater configuration is needed.
 
 ## CI artifacts from `main`
 
-Every successful push to `main` builds and uploads the workflow artifact `Dark-Control-Windows-x64` containing:
+Every successful push to `main` builds and uploads the workflow artifact `Dark-Control-Windows-x64` containing only Windows EXE files:
 
-- `dark-control.exe`
-- the WiX/MSI installer
-- the NSIS setup EXE
+- `dark-control.exe` — portable development build
+- NSIS setup `.exe` — installer used for testing the release path
 
-These Actions artifacts are for development/testing. The installed app checks **GitHub Releases**, not workflow artifacts.
+No MSI package is built or uploaded.
 
 ## Publishing a release
 
@@ -55,21 +54,18 @@ git tag -a v0.4.1 -m "Dark Control v0.4.1"
 git push origin v0.4.1
 ```
 
-The `release` workflow verifies that the tag matches `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. It then runs the frontend/Rust checks, builds the portable EXE, MSI and NSIS installer, creates `SHA256SUMS.txt`, and publishes a GitHub Release using the repository's built-in `GITHUB_TOKEN`.
+The `release` workflow verifies that the tag matches `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. It runs the frontend/Rust checks, builds the NSIS Windows installer, and publishes a GitHub Release using the repository's built-in `GITHUB_TOKEN`.
 
-The release contains assets named like:
+The public release contains a single downloadable application asset:
 
 ```text
-Dark-Control-v0.4.1-Windows-x64.exe
-Dark-Control-v0.4.1-Windows-x64.msi
 Dark-Control-v0.4.1-Windows-x64-setup.exe
-SHA256SUMS.txt
 ```
 
-The in-app updater selects the `Windows-x64-setup.exe` asset.
+The in-app updater selects that setup EXE automatically.
 
 ## Security model
 
-This simpler updater intentionally follows the same trust model as manually downloading an installer from the project's GitHub Release page: the release metadata and installer are fetched from GitHub over HTTPS. It does **not** add a separate Tauri updater signature layer.
+This simpler updater follows the same trust model as manually downloading an installer from the project's GitHub Release page: release metadata and the installer are fetched from GitHub over HTTPS. It does **not** add a separate Tauri updater signature layer.
 
-Windows may therefore show its normal SmartScreen/reputation warning for an unsigned application. Eliminating that warning would require a separate Windows code-signing certificate, which is unrelated to the old Tauri updater key pair.
+Windows may therefore show its normal SmartScreen/reputation warning for an unsigned application. Eliminating that warning would require a separate Windows code-signing certificate, which is unrelated to the removed Tauri updater key pair.
