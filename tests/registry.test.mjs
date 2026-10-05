@@ -25,6 +25,7 @@ test("all registered models have exact, unique layout identities and complete ge
     assert.ok(registry.getLayout(device.styleName));
     assert.ok(device.profiles > 0);
     assert.ok(device.connections.every((c) => c.transport !== "Bootloader"));
+    assert.equal(registry.hasSupportedDriver(device), true);
   }
   for (const layout of registry.LAYOUT_REGISTRY.values()) {
     assert.match(layout.width, /^\d*\.?\d+rem$/);
@@ -51,48 +52,34 @@ test("inherited canvas dimensions come from vendor CSS, not renderer guesses", (
   }
 });
 
-test("verified non-Common models use the shared safe adapter gates, not a Common hardcode", () => {
-  const model = registry.DEVICE_REGISTRY.find((device) => device.routerId === "WitmodSeries");
-  const pretendVerified = { ...model, verified: true };
-  const preview = registry.previewDevice(pretendVerified);
+test("all known models are supported while feature exposure stays family-specific", () => {
   assert.equal(registry.DRIVER_CAPABILITIES.size, 7);
-  assert.equal(registry.hasVerifiedDriver(pretendVerified), true);
-  assert.equal(registry.supportsProfileState(pretendVerified), false);
-  assert.equal(preview.verified, true);
-  assert.equal(preview.capabilities.lighting, model.capabilities.lighting);
-  assert.equal(preview.capabilities.snapTap, model.capabilities.snapTap);
-  assert.equal(preview.capabilities.keybindings, false);
-  assert.equal(preview.capabilities.macros, false);
-  assert.equal(preview.capabilities.profiles, false);
-  const bushido = registry.DEVICE_REGISTRY.find((device) => device.verified);
-  assert.equal(registry.hasVerifiedDriver(bushido), true);
-  assert.equal(registry.supportsProfileState(bushido), true);
-});
-
-test("only Bushido ANSI exposes usable capabilities; advertised TFT/sync remain disabled", () => {
-  const verified = registry.DEVICE_REGISTRY.filter((d) => d.verified);
-  assert.equal(verified.length, 1);
-  assert.equal(verified[0].productName, "DPKB_BUSHIDO_87_ANSI");
   for (const device of registry.DEVICE_REGISTRY) {
     const preview = registry.previewDevice(device);
+    assert.equal(preview.supported, true);
     assert.equal(preview.connected, false);
     assert.equal(preview.styleName, device.styleName);
     assert.equal(preview.advertisedCapabilities, device.capabilities);
-    for (const field of ["lighting", "keybindings", "fnLayer", "macros", "snapTap", "profiles"]) {
-      assert.equal(preview.capabilities[field], device.verified && device.capabilities[field]);
-    }
-    for (const field of ["tft", "sync", "actuation", "performance"]) {
-      assert.equal(preview.capabilities[field], false);
-    }
-    if (!device.verified) assert.deepEqual(preview.capabilities.lightingEffects, []);
   }
+  const witmod = registry.DEVICE_REGISTRY.find((device) => device.routerId === "WitmodSeries");
+  const witmodPreview = registry.previewDevice(witmod);
+  assert.equal(registry.supportsProfileState(witmod), false);
+  assert.equal(witmodPreview.capabilities.lighting, witmod.capabilities.lighting);
+  assert.equal(witmodPreview.capabilities.snapTap, witmod.capabilities.snapTap);
+  assert.equal(witmodPreview.capabilities.keybindings, false);
+  assert.equal(witmodPreview.capabilities.macros, false);
+  assert.equal(witmodPreview.capabilities.profiles, false);
+
+  const bushido = registry.DEVICE_REGISTRY.find((device) => device.productName === "DPKB_BUSHIDO_87_ANSI");
+  assert.equal(registry.supportsProfileState(bushido), true);
+  for (const field of ["tft", "sync", "actuation"])
+    assert.equal(registry.previewDevice(bushido).capabilities[field], false);
 });
 
 test("Bushido matrix slots preserve the previous firmware mapping and Fn slot", async () => {
   const keys = keyboard.getKeyboardKeys("8440US");
   assert.equal(keys.length, 87);
   assert.equal(keys.find((k) => k.id === "Custom_Fnkey").slot, 71);
-  // Compare the complete historical HID->slot table saved in the previous commit.
   const baseline = JSON.parse(await readFile(new URL("./fixtures/bushido-slots.json", import.meta.url), "utf8"));
   assert.deepEqual(Object.fromEntries(keys.filter((k) => k.hid > 0).map((k) => [k.hid, k.slot])), baseline);
   assert.equal(keyboard.getHidOptions(keys).length, 86);
