@@ -1,0 +1,79 @@
+{
+  "CommonKeyboardSeries": {
+    "profileState": true,
+    "lighting": true,
+    "customLighting": true,
+    "keybindings": true,
+    "fnLayer": true,
+    "snapTap": true,
+    "macros": true,
+    "performance": true,
+    "profiles": true
+  },
+  "DponeSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": true,
+    "fnLayer": false,
+    "snapTap": true,
+    "macros": true,
+    "performance": false,
+    "profiles": false
+  },
+  "WitmodSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": true,
+    "fnLayer": true,
+    "snapTap": true,
+    "macros": true,
+    "performance": false,
+    "profiles": false
+  },
+  "TFTKeyboardSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": false,
+    "fnLayer": false,
+    "snapTap": false,
+    "macros": false,
+    "performance": false,
+    "profiles": false
+  },
+  "SparkLinkSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": true,
+    "fnLayer": true,
+    "snapTap": false,
+    "macros": false,
+    "performance": false,
+    "profiles": false
+  },
+  "HFDKBSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": false,
+    "fnLayer": false,
+    "snapTap": false,
+    "macros": false,
+    "performance": false,
+    "profiles": false
+  },
+  "HFDKBRGBSeries": {
+    "profileState": false,
+    "lighting": true,
+    "customLighting": false,
+    "keybindings": true,
+    "fnLayer": true,
+    "snapTap": false,
+    "macros": true,
+    "performance": false,
+    "profiles": false
+  }
+}

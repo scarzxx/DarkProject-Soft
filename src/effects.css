@@ -1,0 +1,121 @@
+.effects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.effects-grid button {
+  min-width: 0;
+  height: 82px;
+  padding: 6px;
+  border: 1px solid #283240;
+  border-radius: 10px;
+  background: linear-gradient(155deg, #151c27, #0c121a);
+  color: #c0c9d7;
+  cursor: pointer;
+  transition: border-color .16s, box-shadow .16s, transform .16s;
+}
+
+.effects-grid button:hover {
+  border-color: #8860ba;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px #0004;
+}
+
+.effects-grid button:focus-visible {
+  outline: 2px solid #b990ff;
+  outline-offset: 3px;
+}
+
+.effects-grid button.active {
+  border-color: #a871ff;
+  background: linear-gradient(155deg, #281b40, #161222);
+  color: #f0e7ff;
+  box-shadow: inset 0 0 0 1px #a871ff33, 0 0 18px #8948ff20;
+}
+
+.effects-grid small {
+  display: block;
+  margin-top: 6px;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fx {
+  --fx-color: #bba0ff;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid #ffffff0a;
+  border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 110%, #8246b84d, transparent 75%), #0b1220;
+  color: var(--fx-color);
+}
+
+.fx::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .55;
+}
+
+.fx svg {
+  box-sizing: content-box;
+  padding: 5px;
+  border: 1px solid #ffffff10;
+  border-radius: 9px;
+  background: #101320b8;
+  filter: drop-shadow(0 0 3px var(--fx-color));
+}
+
+.fx-0, .fx-5, .fx-12 {
+  --fx-color: #80e7ff;
+  background: linear-gradient(125deg, #123c4b, #1a214b 55%, #442050);
+}
+.fx-0::before, .fx-5::before, .fx-12::before {
+  background: repeating-linear-gradient(165deg, transparent 0 10px, #6de7ff44 11px 12px, transparent 13px 21px);
+}
+.fx-1::before, .fx-9::before {
+  background: repeating-radial-gradient(circle at center, transparent 0 8px, #b38aff55 9px 10px, transparent 11px 17px);
+}
+.fx-2::before, .fx-3::before {
+  background: radial-gradient(circle at 18% 30%, #ff90dd 0 1px, transparent 2px), radial-gradient(circle at 78% 64%, #79e2ff 0 2px, transparent 3px), radial-gradient(circle at 67% 22%, #e0bbff 0 1px, transparent 2px), radial-gradient(circle at 30% 78%, #b183ff 0 2px, transparent 3px);
+}
+.fx-4, .fx-7 { --fx-color: #c7a4ff; }
+.fx-6, .fx-19 {
+  --fx-color: #f4bdff;
+  background: linear-gradient(115deg, #163e43, #28375c, #513150, #473817);
+}
+.fx-6::before { background: linear-gradient(90deg, #34e5ad33, #65bfff33, #c36cff33, #ffb65833); }
+.fx-8 { --fx-color: #f9a4cc; background: radial-gradient(ellipse at center, #762a5666, #22162b); }
+.fx-10, .fx-11 { --fx-color: #e3b2ff; background: radial-gradient(ellipse at 50% 90%, #7139a566, #131323); }
+.fx-13 { --fx-color: #88bfff; background: linear-gradient(180deg, #152942, #16172d); }
+.fx-13::before { background: repeating-linear-gradient(105deg, transparent 0 16px, #79bfff44 17px 18px, transparent 19px 27px); }
+.fx-20 { --fx-color: #7d899b; background: #0b1018; }
+
+html[data-theme="light"] .effects-grid button.active {
+  border-color: #8952d9;
+  color: #4d2586;
+  background: linear-gradient(155deg, #f1e6ff, #faf7ff);
+}
+
+@media (max-width: 1180px) {
+  .effects-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1050px) {
+  .effects-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .effects-grid button { transition: none; }
+  .effects-grid button:hover { transform: none; }
+}

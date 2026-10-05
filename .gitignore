@@ -1,0 +1,12 @@
+node_modules/
+.npm-cache/
+dist/
+output/
+.vite/
+src-tauri/target/
+.DS_Store
+*.log
+.env
+.history
+test-output/
+registry/bundle-extraction/

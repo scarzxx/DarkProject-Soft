@@ -1,0 +1,2812 @@
+[
+  {
+    "id": "0x05AC0x024F001",
+    "sourceId": "KD98A_Sunset",
+    "modelName": "KD98UK",
+    "productName": "USB KEYBOARD",
+    "hardwareName": "USB KEYBOARD",
+    "displayName": "DPP98_GSH_SUNS_ISO_DE",
+    "vendorId": 1452,
+    "productId": 591,
+    "connections": [
+      {
+        "vendorId": 1452,
+        "productId": 591,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65299,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "TFTKeyboardSeries",
+    "styleName": "KD98UK",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": false,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        20
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x05AC0x024F002",
+    "sourceId": "KD98A",
+    "modelName": "DPP98_GSH_SUNS_ANSI_EN",
+    "productName": "SUNS_ANSI_EN",
+    "hardwareName": "SUNS_ANSI_EN",
+    "displayName": "DPP98_GSH_SUNS_ANSI_EN",
+    "vendorId": 1452,
+    "productId": 591,
+    "connections": [
+      {
+        "vendorId": 1452,
+        "productId": 591,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65299,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "TFTKeyboardSeries",
+    "styleName": "KD98US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": false,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        20
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x05AC0x0250001",
+    "sourceId": "KD98A2_Sunset",
+    "modelName": "KD98UK",
+    "productName": "USB KEYBOARD",
+    "hardwareName": "USB KEYBOARD",
+    "displayName": "DPP98_GSH_SUNS_ISO_DE",
+    "vendorId": 1452,
+    "productId": 592,
+    "connections": [
+      {
+        "vendorId": 1452,
+        "productId": 592,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65384,
+        "usage": 97,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "TFTKeyboardSeries",
+    "styleName": "KD98UK",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": false,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        20
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x05AC0x0250002",
+    "sourceId": "KD98A2",
+    "modelName": "DPP98_GSH_SUNS_ANSI_EN",
+    "productName": "SUNS_ANSI_EN",
+    "hardwareName": "SUNS_ANSI_EN",
+    "displayName": "DPP98_GSH_SUNS_ANSI_EN",
+    "vendorId": 1452,
+    "productId": 592,
+    "connections": [
+      {
+        "vendorId": 1452,
+        "productId": 592,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65299,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "TFTKeyboardSeries",
+    "styleName": "KD98US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": false,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        20
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x1A2C0x1514001",
+    "sourceId": "DPONE87ANSI",
+    "modelName": "Dpone 87ANSI",
+    "productName": "DPONE87ANSI",
+    "hardwareName": "DPONE87ANSI",
+    "displayName": "DPONE 87ANSI",
+    "vendorId": 6700,
+    "productId": 5396,
+    "connections": [
+      {
+        "vendorId": 6700,
+        "productId": 5396,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65280,
+        "usage": 2,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "DponeSeries",
+    "styleName": "DPONE87ANSI",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        0,
+        8,
+        7,
+        10,
+        31,
+        6,
+        30,
+        32,
+        1,
+        9,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x1A2C0x1513001",
+    "sourceId": "DPONE87ISO",
+    "modelName": "Dpone 87ISO",
+    "productName": "DPONE87ISO",
+    "hardwareName": "DPONE87ISO",
+    "displayName": "DPONE 87ISO",
+    "vendorId": 6700,
+    "productId": 5395,
+    "connections": [
+      {
+        "vendorId": 6700,
+        "productId": 5395,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65280,
+        "usage": 2,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "DponeSeries",
+    "styleName": "DPONE87ISO",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        0,
+        8,
+        7,
+        10,
+        31,
+        6,
+        30,
+        32,
+        1,
+        9,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F001",
+    "sourceId": "DPKB_VIOLET_87_ANSI_UA",
+    "modelName": "DPKB_VIOLET_87_ANSI_UA",
+    "productName": "DPKB_VIOLET_87_ANSI_UA",
+    "hardwareName": "DPKB_VIOLET_87_ANSI_UA",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F002",
+    "sourceId": "DPKB_VIOLET_87_ANSI",
+    "modelName": "DPKB_VIOLET_87_ANSI",
+    "productName": "DPKB_VIOLET_87_ANSI",
+    "hardwareName": "DPKB_VIOLET_87_ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F003",
+    "sourceId": "DPKB_VIOLET_87_ISO",
+    "modelName": "DPKB_VIOLET_87_ISO",
+    "productName": "DPKB_VIOLET_87_ISO",
+    "hardwareName": "DPKB_VIOLET_87_ISO",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F004",
+    "sourceId": "DPKB_MIDNIGHT_87_ANSI_UA",
+    "modelName": "DPKB_MIDNIGHT_87_ANSI_UA",
+    "productName": "DPKB_MIDNIGHT_87_ANSI_UA",
+    "hardwareName": "DPKB_MIDNIGHT_87_ANSI_UA",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F005",
+    "sourceId": "DPKB_MIDNIGHT_87_ANSI",
+    "modelName": "DPKB_MIDNIGHT_87_ANSI",
+    "productName": "DPKB_MIDNIGHT_87_ANSI",
+    "hardwareName": "DPKB_MIDNIGHT_87_ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F006",
+    "sourceId": "DPKB_MIDNIGHT_87_ISO",
+    "modelName": "DPKB_MIDNIGHT_87_ISO",
+    "productName": "DPKB_MIDNIGHT_87_ISO",
+    "hardwareName": "DPKB_MIDNIGHT_87_ISO",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F007",
+    "sourceId": "DPKB_DAYNIGHT_87_ANSI_UA",
+    "modelName": "DPKB_DAYLIGHT_87_ANSI_UA",
+    "productName": "DPKB_DAYLIGHT_87_ANSI_UA",
+    "hardwareName": "DPKB_DAYLIGHT_87_ANSI_UA",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F008",
+    "sourceId": "DPKB_DAYNIGHT_87_ANSI",
+    "modelName": "DPKB_DAYLIGHT_87_ANSI",
+    "productName": "DPKB_DAYLIGHT_87_ANSI",
+    "hardwareName": "DPKB_DAYLIGHT_87_ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F009",
+    "sourceId": "DPKB_DAYNIGHT_87_ISO",
+    "modelName": "DPKB_DAYLIGHT_87_ISO",
+    "productName": "DPKB_DAYLIGHT_87_ISO",
+    "hardwareName": "DPKB_DAYLIGHT_87_ISO",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F010",
+    "sourceId": "DPKB_ONIONITE_87_ANSI",
+    "modelName": "DPKB_ONIONITE_87_ANSI",
+    "productName": "DPKB_ONIONITE_87_ANSI",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F018",
+    "sourceId": "DPKB_ONIONITE_87_ANSI.",
+    "modelName": "DPKB_ONIONITE_87_ANSI.",
+    "productName": "DPKB_ONIONITE_87_ANSI.",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI.",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F019",
+    "sourceId": "DPKB_ONIONITE_87._ANSI",
+    "modelName": "DPKB_ONIONITE_87._ANSI",
+    "productName": "DPKB_ONIONITE_87._ANSI",
+    "hardwareName": "DPKB_ONIONITE_87._ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE410001",
+    "sourceId": "DPKB_ONIONITE_87_ANSI_WL",
+    "modelName": "DPKB_ONIONITE_87_ANSI_WL",
+    "productName": "DPKB_ONIONITE_87_ANSI_WL",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI_WL",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58384,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58384,
+        "transport": "USB"
+      },
+      {
+        "vendorId": 13357,
+        "productId": 58385,
+        "transport": "Dongle"
+      },
+      {
+        "vendorId": 34952,
+        "productId": 8738,
+        "transport": "MouduleLoader"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843WIRELESSUS",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE410002",
+    "sourceId": "DPKB_ONIONITE_87._ANSI_WL",
+    "modelName": "DPKB_ONIONITE_87._ANSI_WL",
+    "productName": "DPKB_ONIONITE_87._ANSI_WL",
+    "hardwareName": "DPKB_ONIONITE_87._ANSI_WL",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58384,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58384,
+        "transport": "USB"
+      },
+      {
+        "vendorId": 13357,
+        "productId": 58385,
+        "transport": "Dongle"
+      },
+      {
+        "vendorId": 34952,
+        "productId": 8738,
+        "transport": "MouduleLoader"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843WIRELESSUS",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE410003",
+    "sourceId": "DPKB_ONIONITE_87_ANSI_WL..",
+    "modelName": "DPKB_ONIONITE_87_ANSI_WL..",
+    "productName": "DPKB_ONIONITE_87_ANSI_WL..",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI_WL..",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58384,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58384,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843WIRELESSUS",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE410004",
+    "sourceId": "DPKB_ONIONITE_87_ANSI_BL_WL",
+    "modelName": "DPKB_ONIONITE_87_ANSI_BL_WL",
+    "productName": "DPKB_ONIONITE_87_ANSI_BL_WL",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI_BL_WL",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58384,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58384,
+        "transport": "USB"
+      },
+      {
+        "vendorId": 13357,
+        "productId": 58385,
+        "transport": "Dongle"
+      },
+      {
+        "vendorId": 34952,
+        "productId": 8738,
+        "transport": "MouduleLoader"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843WIRELESSUS",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F011",
+    "sourceId": "DPKB_BUSHIDO_87_ANSI_UA",
+    "modelName": "DPKB_BUSHIDO_87_ANSI_UA",
+    "productName": "DPKB_BUSHIDO_87_ANSI_UA",
+    "hardwareName": "DPKB_BUSHIDO_87_ANSI_UA",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F012",
+    "sourceId": "DPKB_BUSHIDO_87_ANSI",
+    "modelName": "DPKB_BUSHIDO_87_ANSI",
+    "productName": "DPKB_BUSHIDO_87_ANSI",
+    "hardwareName": "DPKB_BUSHIDO_87_ANSI",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": true,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F013",
+    "sourceId": "DPKB_BUSHIDO_87_ISO",
+    "modelName": "DPKB_BUSHIDO_87_ISO",
+    "productName": "DPKB_BUSHIDO_87_ISO",
+    "hardwareName": "DPKB_BUSHIDO_87_ISO",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F014",
+    "sourceId": "DPKB_CELESTIAL_87_ANSI_UA",
+    "modelName": "DPKB_CELESTIAL_87_ANSI_UA",
+    "productName": "DPKB_CELESTIAL_87_ANSI_UA",
+    "hardwareName": "DPKB_CELESTIAL_87_ANSI_UA",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F015",
+    "sourceId": "DPKB_CELESTIAL_87_ANSI",
+    "modelName": "DPKB_CELESTIAL_87_ANSI",
+    "productName": "DPKB_CELESTIAL_87_ANSI",
+    "hardwareName": "DPKB_CELESTIAL_87_ANSI",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F016",
+    "sourceId": "DPKB_CELESTIAL_87_ISO",
+    "modelName": "DPKB_CELESTIAL_87_ISO",
+    "productName": "DPKB_CELESTIAL_87_ISO",
+    "hardwareName": "DPKB_CELESTIAL_87_ISO",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F017",
+    "sourceId": "DPKB_DELTA_87_ANSI",
+    "modelName": "DPKB_DELTA_87_ANSI",
+    "productName": "DPKB_DELTA_87_ANSI",
+    "hardwareName": "DPKB_DELTA_87_ANSI",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F020",
+    "sourceId": "DPKB_DELTA_87._ANSI",
+    "modelName": "DPKB_DELTA_87._ANSI",
+    "productName": "DPKB_DELTA_87._ANSI",
+    "hardwareName": "DPKB_DELTA_87._ANSI",
+    "displayName": "ALU87B",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "8440US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F021",
+    "sourceId": "DPKB_FUJI_87_ANSI",
+    "modelName": "DPKB_FUJI_87_ANSI",
+    "productName": "DPKB_FUJI_87_ANSI",
+    "hardwareName": "DPKB_FUJI_87_ANSI",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F022",
+    "sourceId": "DPKB_FUJI_87_ANSI_UA",
+    "modelName": "DPKB_FUJI_87_ANSI_UA",
+    "productName": "DPKB_FUJI_87_ANSI_UA",
+    "hardwareName": "DPKB_FUJI_87_ANSI_UA",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F023",
+    "sourceId": "DPKB_FUJI_87_ISO",
+    "modelName": "DPKB_FUJI_87_ISO",
+    "productName": "DPKB_FUJI_87_ISO",
+    "hardwareName": "DPKB_FUJI_87_ISO",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F024",
+    "sourceId": "DPKB_FUJI_87_ISO_FR",
+    "modelName": "DPKB_FUJI_87_ISO_FR",
+    "productName": "DPKB_FUJI_87_ISO_FR",
+    "hardwareName": "DPKB_FUJI_87_ISO_FR",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843UK",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x342D0xE40F025",
+    "sourceId": "DPKB_ONIONITE_87_ANSI_BL",
+    "modelName": "DPKB_ONIONITE_87_ANSI_BL",
+    "productName": "DPKB_ONIONITE_87_ANSI_BL",
+    "hardwareName": "DPKB_ONIONITE_87_ANSI_BL",
+    "displayName": "ALU87A",
+    "vendorId": 13357,
+    "productId": 58383,
+    "connections": [
+      {
+        "vendorId": 13357,
+        "productId": 58383,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65281,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "CommonKeyboardSeries",
+    "styleName": "GK843US",
+    "profiles": 3,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": true,
+      "lightingEffects": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345001",
+    "sourceId": "DPP87_GSH_INK_ANSI_EN",
+    "modelName": "DPP87_GSH_INK_ANSI_EN",
+    "productName": "GK8110DPRGBEU",
+    "hardwareName": "GK8110DPRGBEU",
+    "displayName": "KD87",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD87US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345002",
+    "sourceId": "DPP87_GSH_INK_ISO_DE",
+    "modelName": "DPP87_GSH_INK_ISO_DE",
+    "productName": "GK8110UKDPRGB",
+    "hardwareName": "GK8110UKDPRGB",
+    "displayName": "KD87",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD87UK",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345003",
+    "sourceId": "DPP83_GSH_NAVY_ANSI_EN",
+    "modelName": "DPP83_GSH_NAVY_ANSI_EN",
+    "productName": "GK8170MDPRGBEU",
+    "hardwareName": "GK8170MDPRGBEU",
+    "displayName": "KD83",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD83US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345004",
+    "sourceId": "DPP83_GSH_NAVY_ISO_DE",
+    "modelName": "DPP83_GSH_NAVY_ISO_DE",
+    "productName": "K8170DPUKRGB",
+    "hardwareName": "K8170DPUKRGB",
+    "displayName": "KD83",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD83UK",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345005",
+    "sourceId": "GK8151UKDPRGB",
+    "modelName": "GK8151UKDPRGB",
+    "productName": "GK8151UKDPRGB",
+    "hardwareName": "GK8151UKDPRGB",
+    "displayName": "KD68",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD69UK",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x04160xC345006",
+    "sourceId": "GK8150SKRGB",
+    "modelName": "GK8150SKRGB",
+    "productName": "GK8150SKRGBEU",
+    "hardwareName": "GK8150SKRGBEU",
+    "displayName": "KD68",
+    "vendorId": 1046,
+    "productId": 49989,
+    "connections": [
+      {
+        "vendorId": 1046,
+        "productId": 49989,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65307,
+        "usage": 145,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "WitmodSeries",
+    "styleName": "WITMOD68US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x1CA40x0101001",
+    "sourceId": "GAMMA87_ANSI",
+    "modelName": "GAMMA87_ANSI",
+    "productName": "DPKB_GAMMA_87_ANSI",
+    "hardwareName": "DPKB_GAMMA_87_ANSI",
+    "displayName": "ALU87B",
+    "vendorId": 7332,
+    "productId": 257,
+    "connections": [
+      {
+        "vendorId": 7332,
+        "productId": 257,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65440,
+        "usage": 1,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "SparkLinkSeries",
+    "styleName": "GK841US",
+    "profiles": 1,
+    "fnLayers": 3,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        20,
+        8,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": true
+    }
+  },
+  {
+    "id": "0x0C450x800A001",
+    "sourceId": "ALU85A",
+    "modelName": "ALU85A",
+    "productName": "ALU85A",
+    "hardwareName": "ALU85A",
+    "displayName": "ALU85A",
+    "vendorId": 3141,
+    "productId": 32778,
+    "connections": [
+      {
+        "vendorId": 3141,
+        "productId": 32778,
+        "transport": "USB"
+      },
+      {
+        "vendorId": 3141,
+        "productId": 65278,
+        "transport": "Dongle"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65384,
+        "usage": 97,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "HFDKBSeries",
+    "styleName": "WITMOD68US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        6,
+        7,
+        0,
+        3,
+        1,
+        17,
+        14,
+        11,
+        9,
+        10,
+        15,
+        16,
+        18,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0xFEFE0x003D001",
+    "sourceId": "TerraNostra",
+    "modelName": "Terra Nostra",
+    "productName": "Terra Nostra",
+    "hardwareName": "Terra Nostra",
+    "displayName": "Terra_Nostra",
+    "vendorId": 65278,
+    "productId": 61,
+    "connections": [
+      {
+        "vendorId": 65278,
+        "productId": 61,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65384,
+        "usage": 97,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "HFDKBRGBSeries",
+    "styleName": "HFD81US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  },
+  {
+    "id": "0x0C450x8006001",
+    "sourceId": "TerraNova",
+    "modelName": "Terra Nova",
+    "productName": "Terra Nova",
+    "hardwareName": "Terra Nova",
+    "displayName": "Terra_Nova",
+    "vendorId": 3141,
+    "productId": 32774,
+    "connections": [
+      {
+        "vendorId": 3141,
+        "productId": 32774,
+        "transport": "USB"
+      }
+    ],
+    "interfaces": [
+      {
+        "usagePage": 65384,
+        "usage": 97,
+        "transport": "USB"
+      }
+    ],
+    "routerId": "HFDKBRGBSeries",
+    "styleName": "HFD81US",
+    "profiles": 1,
+    "fnLayers": 1,
+    "defaultProfile": 0,
+    "verified": false,
+    "capabilities": {
+      "lighting": true,
+      "customLighting": true,
+      "keybindings": true,
+      "fnLayer": true,
+      "macros": true,
+      "performance": false,
+      "snapTap": true,
+      "maxSnapTapPairs": 20,
+      "profiles": false,
+      "lightingEffects": [
+        8,
+        10,
+        4,
+        3,
+        13,
+        2,
+        7,
+        6,
+        23,
+        24,
+        25,
+        1,
+        11,
+        28,
+        27,
+        26,
+        12,
+        22,
+        21,
+        19
+      ],
+      "tft": true,
+      "sync": true,
+      "actuation": false
+    }
+  }
+]
