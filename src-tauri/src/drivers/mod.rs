@@ -55,6 +55,12 @@ pub fn supported(metadata: &DeviceMetadata) -> bool {
     }) && descriptor(&metadata.router_id).is_some_and(|driver| driver.implemented)
 }
 
+/// Compatibility alias for older protocol fixtures; runtime terminology is `supported`.
+#[doc(hidden)]
+pub fn available(metadata: &DeviceMetadata) -> bool {
+    supported(metadata)
+}
+
 /// Reject unknown or unsupported identities before constructing a HID transport.
 pub fn ensure_supported(metadata: Option<&DeviceMetadata>) -> Result<(), String> {
     if metadata.is_some_and(supported) {
