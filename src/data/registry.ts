@@ -18,7 +18,6 @@ export interface DeviceMetadata {
   profiles: number;
   fnLayers: number;
   defaultProfile: number;
-  verified: boolean;
   capabilities: DeviceCapabilities;
   connections: { vendorId: number; productId: number; transport: string }[];
   interfaces: { usagePage: number; usage: number; transport: string | null }[];
@@ -75,34 +74,33 @@ export function getLayout(styleName: string | null): KeyboardLayout | undefined 
   return styleName === null ? undefined : LAYOUT_REGISTRY.get(styleName);
 }
 
-/** Check model verification plus a registered protocol and safe UI adapter. */
-export function hasVerifiedDriver(device: DeviceMetadata): boolean {
-  return device.verified
-    && DRIVER_CAPABILITIES.has(device.routerId)
+/** Every canonical model is supported when its protocol family is implemented by this build. */
+export function hasSupportedDriver(device: DeviceMetadata): boolean {
+  return DRIVER_CAPABILITIES.has(device.routerId)
     && PROTOCOL_REGISTRY.get(device.routerId)?.deviceIds.includes(device.id) === true;
 }
 
 /** True only for families whose complete profile snapshot maps losslessly to ProfileState. */
 export function supportsProfileState(device: DeviceMetadata): boolean {
-  return hasVerifiedDriver(device)
+  return hasSupportedDriver(device)
     && DRIVER_CAPABILITIES.get(device.routerId)?.profileState === true;
 }
 
-/** Expose only vendor features that also have a safe app-level command adapter. */
+/** Expose only vendor features that also have an app-level command adapter. */
 export function availableCapabilities(device: DeviceMetadata): DeviceCapabilities {
-  const available = hasVerifiedDriver(device);
+  const supported = hasSupportedDriver(device);
   const driver = DRIVER_CAPABILITIES.get(device.routerId);
-  const lighting = available && driver?.lighting === true && device.capabilities.lighting;
-  const snapTap = available && driver?.snapTap === true && device.capabilities.snapTap;
+  const lighting = supported && driver?.lighting === true && device.capabilities.lighting;
+  const snapTap = supported && driver?.snapTap === true && device.capabilities.snapTap;
   return {
     lighting,
-    customLighting: available && driver?.customLighting === true && device.capabilities.customLighting,
-    keybindings: available && driver?.keybindings === true && device.capabilities.keybindings,
-    fnLayer: available && driver?.fnLayer === true && device.capabilities.fnLayer,
+    customLighting: supported && driver?.customLighting === true && device.capabilities.customLighting,
+    keybindings: supported && driver?.keybindings === true && device.capabilities.keybindings,
+    fnLayer: supported && driver?.fnLayer === true && device.capabilities.fnLayer,
     snapTap,
-    macros: available && driver?.macros === true && device.capabilities.macros,
-    performance: available && driver?.performance === true && device.capabilities.performance,
-    profiles: available && driver?.profiles === true && device.capabilities.profiles,
+    macros: supported && driver?.macros === true && device.capabilities.macros,
+    performance: supported && driver?.performance === true && device.capabilities.performance,
+    profiles: supported && driver?.profiles === true && driver.profileState === true && device.capabilities.profiles,
     maxSnapTapPairs: snapTap ? device.capabilities.maxSnapTapPairs : 0,
     lightingEffects: lighting ? device.capabilities.lightingEffects : [],
     // Separate media/sync/actuation APIs are intentionally not exposed yet.
@@ -114,12 +112,12 @@ export function availableCapabilities(device: DeviceMetadata): DeviceCapabilitie
 
 /** Build a disconnected browser preview from the same metadata as native HID. */
 export function previewDevice(device: DeviceMetadata): DeviceSummary {
-  const verified = hasVerifiedDriver(device);
+  const supported = hasSupportedDriver(device);
   return {
     id: device.id,
     registryId: device.id,
     known: true,
-    verified,
+    supported,
     productName: device.productName,
     vendorId: device.vendorId,
     productId: device.productId,
