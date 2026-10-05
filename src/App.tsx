@@ -29,6 +29,7 @@ import { translateError } from "./lib/messages";
 import type { MessageKey, MessageParameters } from "./lib/messages";
 import type {
   DeviceSummary,
+  FeatureState,
   LightingSettings,
   MacroEvent,
   Page,
@@ -67,6 +68,7 @@ export default function App() {
   const [devices, setDevices] = useState<DeviceSummary[]>([]);
   const [profile, setProfile] = useState(0);
   const [state, setState] = useState<ProfileState | null>(null);
+  const [hardwareReady, setHardwareReady] = useState(false);
   const [lighting, setLighting] = useState<LightingSettings>(DEF_LIGHT);
   const [performance, setPerformance] = useState<PerformanceSettings>(DEF_PERF);
   const [snapEnabled, setSnapEnabled] = useState(false);
@@ -90,7 +92,7 @@ export default function App() {
     : device ? deviceLabel(device) : t("Dark Project keyboard");
   const firmwareName = device?.firmware === "preview" ? t("Preview")
     : device?.firmware === "unknown" ? t("Unknown") : device?.firmware ?? "—";
-  const canWrite = !!device?.verified && state !== null && !busy;
+  const canWrite = !!device?.verified && hardwareReady && !busy;
 
   const run = async (label: Exclude<StatusMessage, { error: string }>, fn: () => Promise<void>) => {
     if (operationPending.current) return;
@@ -102,6 +104,7 @@ export default function App() {
       setStatus({ ...label, completed: true });
     } catch (e) {
       console.error(e);
+      setHardwareReady(false);
       setStatus({ error: e instanceof Error ? e.message : String(e) });
     } finally {
       operationPending.current = false;
@@ -121,18 +124,41 @@ export default function App() {
     setActiveMacro((current) => loaded.some((m) => m.id === current) ? current : (loaded[0]?.id ?? null));
   };
 
-  const readBack = async (p = profile) => {
-    const s = await api.readProfile(p, device?.id);
-    hydrate(s);
+  const hydrateFeatures = (s: FeatureState) => {
+    setState(null);
+    setPerformance(DEF_PERF);
+    setMacros([]);
+    setActiveMacro(null);
+    if (s.lighting) {
+      setLighting(s.lighting);
+      setHexValue(hex(s.lighting.color));
+    }
+    if (s.snapTap) {
+      setSnapEnabled(s.snapTap.enabled);
+      setSnapPairs(s.snapTap.pairs);
+    }
+  };
+
+  const hydrateEditable = (s: api.EditableDeviceState) => {
+    if (s.profileState) hydrate(s.profileState);
+    else hydrateFeatures(s.features);
+  };
+
+  const readBack = async (p = profile, target = device) => {
+    if (!target) throw new Error("Selected device is no longer connected");
+    hydrateEditable(await api.readDeviceState(target, p));
   };
 
   const loadDevice = (requestedId = device?.id) => run({ key: "Reading keyboard" }, async () => {
+    setHardwareReady(false);
     setState(null);
     setDevice(null);
     setSelectedKey(null);
     setLayer(1);
     setLighting(DEF_LIGHT);
+    setPerformance(DEF_PERF);
     setHexValue(hex(DEF_LIGHT.color));
+    setSnapEnabled(false);
     setSnapPairs([]);
     setMacros([]);
     setActiveMacro(null);
@@ -142,18 +168,24 @@ export default function App() {
     const p = Math.max(0, Math.min(d.profiles - 1, d.activeProfile ?? 0));
     setDevice(d);
     setProfile(p);
-    if (d.verified) hydrate(await api.readProfile(p, d.id));
-    else setPage("device");
+    if (d.verified) {
+      await readBack(p, d);
+      setHardwareReady(true);
+    } else {
+      setPage("device");
+    }
   });
 
   useEffect(() => { void loadDevice(); }, []);
 
   const changeProfile = (p: number) => run({ key: "Switching to Profile {number}", parameters: { number: p + 1 } }, async () => {
+    setHardwareReady(false);
     await api.switchProfile(p, device?.id);
     await delay(90);
     setProfile(p);
     setSelectedKey(null);
     await readBack(p);
+    setHardwareReady(true);
   });
 
   const caps = device?.capabilities;
@@ -325,7 +357,7 @@ export default function App() {
   </Panel>;
 
   const renderDevice = () => <>
-    <PageTitle title={t("Device")} subtitle={t(device?.connected && device.verified ? "Live hardware state read directly from the keyboard." : "Device identity and vendor layout metadata.")} action={<button className="primary-btn" disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
+    <PageTitle title={t("Device")} subtitle={t(device?.connected && device.verified && hardwareReady ? "Live hardware state read directly from the keyboard." : "Device identity and vendor layout metadata.")} action={<button className="primary-btn" disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
     {device && !device.verified && <div className="notice verification-notice"><Info size={18}/><span>{t(device.known ? "Unverified model: layout preview only. HID commands are disabled." : "Unknown model: no matching layout or verified driver. HID commands are disabled.")}</span></div>}
     <div className="device-page-grid">
       {devicePanel}
@@ -334,7 +366,7 @@ export default function App() {
         <dl>
           <div><dt>{t("Connection")}</dt><dd>{device?.connected ? t("USB · Connected") : t("Not connected")}</dd></div>
           <div><dt>{t("Firmware")}</dt><dd>{firmwareName}</dd></div>
-          <div><dt>{t("Active profile")}</dt><dd>{device?.verified ? t("Profile {number}", { number: profile + 1 }) : "—"}</dd></div>
+          <div><dt>{t("Active profile")}</dt><dd>{device?.verified && hardwareReady ? t("Profile {number}", { number: profile + 1 }) : "—"}</dd></div>
           <div><dt>{t("Serial")}</dt><dd>{device?.serialNumber ?? "—"}</dd></div>
           <div><dt>{t("Layout")}</dt><dd>{device?.layout === "Unknown" ? t("Unknown") : device?.layout ?? "—"}</dd></div>
           <div><dt>{t("Series")}</dt><dd>{device?.protocol === "Unknown" ? t("Unknown") : device?.protocol ?? "—"}</dd></div>
