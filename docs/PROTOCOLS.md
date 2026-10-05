@@ -35,8 +35,39 @@ snapshot cannot be represented faithfully by Common's mandatory performance
 fields, single-key patch or standalone macro ID. Those adapters return
 `unsupported/unverified`; individual native reads and complete-table writes are
 available internally through `vendor_request`, without inventing performance
-defaults or silently overwriting other macros. No new Tauri command exposes an
-ungated transport.
+defaults or silently overwriting other macros. No Tauri command exposes a raw or
+ungated `vendor_request` transport.
+
+## Runtime integration and safety gates
+
+The native device registry now consumes the vendor HID collections (`usagePage`
+and `usage`) in addition to VID/PID and model identity. Production `open()` refuses
+a HID path whose collection does not match the selected model. Discovery is also
+restricted to exact known VID/PID pairs unless the USB product string is strongly
+Dark Project branded. This prevents an unrelated device from becoming a candidate
+merely because it shares a vendor ID.
+
+Ambiguous Witmod devices can use the vendor identity query only after the user
+selects that HID path. The query sends output report 1 with command 13, receives
+the ordered two-block identity response, extracts the second-last comma-separated
+hardware-name field and resolves it against the registry. This is an identity
+probe only; it does not send a configuration write. Passive enumeration itself
+still sends no HID reports.
+
+`registry/driver-capabilities.json` is the shared frontend/backend source of truth
+for app-level adapters. A model must be individually `verified`, belong to a known
+router and have the corresponding safe adapter before a capability is usable.
+Vendor-advertised capabilities remain available separately for the UI, but they do
+not grant transport access or expose a write path by themselves.
+
+Common still exposes its lossless `ProfileState`. Non-Common families instead use
+the family-neutral `FeatureState` Tauri command. The initial adapters expose only
+operations that already map cleanly to the existing UI without destructive table
+semantics: lighting for the six additional families, plus Snap Tap for DPONE and
+Witmod. Single-key patches, standalone macro writes, profile switching and other
+whole-table operations stay hidden until a safe family-specific editor/adapter is
+implemented. A failed initial read disables writes in the UI until a successful
+reload.
 
 ## Explicit limits and ambiguities
 
@@ -91,7 +122,8 @@ they never become a successful write or a fabricated state.
 
 The discrete Rust tests use a queue-driven mock transport for short replies,
 missing blocks, wrong report IDs, out-of-order blocks, failed writes, disconnects,
-acknowledgement retries, unsupported operations and unknown identities.
+acknowledgement retries, unsupported operations and unknown identities. Disabled
+app-level adapters are also tested to fail before creating a HID transport event.
 
 ## Golden vectors
 
@@ -118,6 +150,7 @@ Regenerate from the external file, while in the repository root:
 ```powershell
 npm run protocol:oracle -- 'C:\Users\scarz\Desktop\main.67f2a4ad434666c9.js'
 npm test
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
