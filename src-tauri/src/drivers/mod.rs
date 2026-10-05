@@ -14,8 +14,8 @@ pub mod vendor;
 mod witmod;
 
 use crate::models::{
-    FeatureState, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding,
-    SnapPair, SnapTapState,
+    FeatureState, LightingFeatureState, LightingSettings, MacroEvent, PerformanceSettings,
+    ProfileState, RawKeyBinding, SnapPair, SnapTapState,
 };
 use crate::registry::DeviceMetadata;
 use hidapi::{DeviceInfo, HidApi};
@@ -100,7 +100,14 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     fn read_features(&self, profile: u8) -> Result<FeatureState, String> {
         let state = common::Keyboard::read_profile(self, profile).map_err(|error| error.to_string())?;
         Ok(FeatureState {
-            lighting: Some(state.lighting),
+            lighting: Some(LightingFeatureState {
+                effect: state.lighting.effect,
+                brightness: state.lighting.brightness,
+                speed: state.lighting.speed,
+                direction: state.lighting.direction,
+                color: Some(state.lighting.color),
+                multi_color: state.lighting.multi_color,
+            }),
             snap_tap: Some(SnapTapState {
                 enabled: state.snap_tap_enabled,
                 pairs: state.snap_tap_pairs,
