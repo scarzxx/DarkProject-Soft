@@ -1,20 +1,31 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const raw = process.argv[2]?.trim().replace(/^v/, "");
-if (!raw || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(raw)) {
-  console.error("Usage: npm run release:version -- 0.4.1");
-  process.exit(1);
-}
-
 const root = process.cwd();
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const write = (file, value) => fs.writeFileSync(path.join(root, file), value, "utf8");
 
 const packagePath = "package.json";
 const packageJson = JSON.parse(read(packagePath));
+const requested = process.argv[2]?.trim().replace(/^v/, "");
+const raw = requested || String(packageJson.version || "").trim();
+
+if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(raw)) {
+  console.error("Version must look like 0.4.2 or 0.4.2-beta.1.");
+  process.exit(1);
+}
+
+// package.json is the single version the user edits in VS Code.
 packageJson.version = raw;
 write(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+
+const lockPath = "package-lock.json";
+if (fs.existsSync(path.join(root, lockPath))) {
+  const lock = JSON.parse(read(lockPath));
+  lock.version = raw;
+  if (lock.packages?.[""]) lock.packages[""].version = raw;
+  write(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
+}
 
 const tauriPath = "src-tauri/tauri.conf.json";
 const tauriConfig = JSON.parse(read(tauriPath));
@@ -46,5 +57,5 @@ preferences = preferences.replace(
 );
 write(preferencesPath, preferences);
 
-console.log(`Dark Control version updated to ${raw}.`);
-console.log(`Next: npm install, commit the version bump, then create and push tag v${raw}.`);
+console.log(`Dark Control version synchronized to ${raw}.`);
+if (requested) console.log("package.json was updated too.");

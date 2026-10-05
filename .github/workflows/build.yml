@@ -25,6 +25,9 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Synchronize application version
+        run: node scripts/release-version.mjs
+
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
 

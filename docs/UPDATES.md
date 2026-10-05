@@ -35,34 +35,50 @@ Every successful push to `main` builds and uploads the workflow artifact `Dark-C
 
 No MSI package is built or uploaded.
 
-## Publishing a release
+## Publishing a release from VS Code
 
-Keep all application versions synchronized with:
+`package.json` is the only version file you need to edit manually.
 
-```powershell
-npm run release:version -- 0.4.1
-npm install
+For example, change:
+
+```json
+"version": "0.4.1"
 ```
 
-Commit the version bump, then create and push the matching tag:
+to:
 
-```powershell
-git add .
-git commit -m "release: v0.4.1"
-git push origin main
-git tag -a v0.4.1 -m "Dark Control v0.4.1"
-git push origin v0.4.1
+```json
+"version": "0.4.2"
 ```
 
-The `release` workflow verifies that the tag matches `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. It runs the frontend/Rust checks, builds the NSIS Windows installer, and publishes a GitHub Release using the repository's built-in `GITHUB_TOKEN`.
+Then use the normal VS Code **Source Control** panel:
 
-The public release contains a single downloadable application asset:
+1. Save your files.
+2. Enter a commit message.
+3. Click **Commit**.
+4. Click **Sync Changes** / **Push**.
+
+No terminal command and no manual Git tag are required.
+
+When the `package.json` version changes on `main`, the release workflow automatically:
+
+1. synchronizes the same version into Tauri, Cargo, package-lock and UI fallbacks;
+2. runs frontend and Rust tests;
+3. builds the NSIS Windows setup EXE;
+4. creates the matching tag, for example `v0.4.2`;
+5. publishes a GitHub Release.
+
+Changing code without changing the `package.json` version does **not** create a new release.
+
+The public release contains one downloadable application asset:
 
 ```text
-Dark-Control-v0.4.1-Windows-x64-setup.exe
+Dark-Control-v0.4.2-Windows-x64-setup.exe
 ```
 
 The in-app updater selects that setup EXE automatically.
+
+For local development, `npm run dev` and production frontend builds automatically synchronize the other version locations from `package.json`, so `package.json` remains the single source of truth.
 
 ## Security model
 

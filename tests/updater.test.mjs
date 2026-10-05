@@ -52,3 +52,21 @@ test("main and release workflows publish EXE-only Windows artifacts without sign
   assert.doesNotMatch(release, /TAURI_SIGNING_PUBLIC_KEY/);
   assert.doesNotMatch(release, /createUpdaterArtifacts/);
 });
+
+test("package.json is the only version users need to edit for a release", () => {
+  const pkg = JSON.parse(read("package.json"));
+  const sync = read("scripts/release-version.mjs");
+  const build = read(".github/workflows/build.yml");
+  const release = read(".github/workflows/release.yml");
+
+  assert.equal(typeof pkg.version, "string");
+  assert.equal(pkg.scripts["version:sync"], "node scripts/release-version.mjs");
+  assert.equal(pkg.scripts.predev, "npm run version:sync");
+  assert.equal(pkg.scripts.prebuild, "npm run version:sync");
+  assert.match(sync, /package\.json is the single version the user edits in VS Code/);
+  assert.match(sync, /package-lock\.json/);
+  assert.match(build, /node scripts\/release-version\.mjs/);
+  assert.match(release, /paths:\s*\n\s*- "package\.json"/);
+  assert.match(release, /Create release tag/);
+  assert.match(release, /git push origin \$tag/);
+});

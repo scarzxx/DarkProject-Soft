@@ -1,6 +1,6 @@
 # Dark Control
 
-Modern desktop configurator for supported **Dark Project** keyboards. Version **0.4.0**.
+Modern desktop configurator for supported **Dark Project** keyboards. Version **0.4.1**.
 
 > Independent community project. Not affiliated with or endorsed by Dark Project.
 
@@ -102,20 +102,24 @@ it runs. To create an installer instead, use `npm run tauri:build`.
 
 ## Releases and updates
 
-Release versions are synchronized with:
+For a new release you only edit the `version` field in `package.json`. Example:
 
-```powershell
-npm run release:version -- 0.4.1
-npm install
+```json
+"version": "0.4.2"
 ```
 
-Push the matching `v0.4.1` tag to run the release workflow. The public GitHub Release
-contains a single downloadable Windows application asset:
+Then commit and **Sync Changes** from the VS Code Source Control panel. No terminal
+command and no manual tag are required. When the version changes on `main`, GitHub
+synchronizes the other version locations, runs all checks, creates `v0.4.2`, builds
+the setup EXE and publishes the release automatically.
+
+The public GitHub Release contains one downloadable Windows application asset:
 
 ```text
-Dark-Control-v0.4.1-Windows-x64-setup.exe
+Dark-Control-v0.4.2-Windows-x64-setup.exe
 ```
 
+Changing code without changing `package.json` version does not create a new release.
 No MSI package, updater signing key pair, `latest.json`, or `.sig` files are used.
 The repository must be public for installed apps to check releases without embedding
 a GitHub token; see [docs/UPDATES.md](docs/UPDATES.md).
