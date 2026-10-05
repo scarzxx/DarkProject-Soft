@@ -51,6 +51,18 @@ pub struct LightingSettings {
     pub multi_color: bool,
 }
 
+/// Family decoders may not expose an RGB value for effects whose color is automatic.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LightingFeatureState {
+    pub effect: u8,
+    pub brightness: u8,
+    pub speed: u8,
+    pub direction: u8,
+    pub color: Option<[u8; 3]>,
+    pub multi_color: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PerformanceSettings {
@@ -78,7 +90,7 @@ pub struct SnapTapState {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FeatureState {
-    pub lighting: Option<LightingSettings>,
+    pub lighting: Option<LightingFeatureState>,
     pub snap_tap: Option<SnapTapState>,
 }
 
