@@ -57,11 +57,10 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ steps.version.outputs.tag }}"
-          git ls-remote --exit-code --tags origin "refs/tags/$tag" *> $null
-          if ($LASTEXITCODE -eq 0) {
+          $existing = git ls-remote --tags origin "refs/tags/$tag"
+          if (-not [string]::IsNullOrWhiteSpace(($existing -join "`n"))) {
             throw "Tag $tag already exists. Increase package.json version before publishing another release."
           }
-          $global:LASTEXITCODE = 0
 
       - name: Setup Node.js
         if: steps.version.outputs.changed == 'true'
