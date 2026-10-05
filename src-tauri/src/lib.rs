@@ -5,8 +5,8 @@ mod registry;
 mod tray;
 
 use models::{
-    DeviceSummary, LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding,
-    SnapPair,
+    DeviceSummary, FeatureState, LightingSettings, MacroEvent, PerformanceSettings, ProfileState,
+    RawKeyBinding, SnapPair,
 };
 
 #[tauri::command]
@@ -17,6 +17,11 @@ fn scan_devices() -> Result<Vec<DeviceSummary>, String> {
 #[tauri::command]
 fn scan_device(device_id: Option<String>) -> Result<DeviceSummary, String> {
     device_manager::scan_device(device_id.as_deref())
+}
+
+#[tauri::command]
+fn read_features(device_id: Option<String>, profile: u8) -> Result<FeatureState, String> {
+    device_manager::open_driver(device_id.as_deref())?.read_features(profile)
 }
 
 #[tauri::command]
@@ -84,6 +89,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             scan_devices,
             scan_device,
+            read_features,
             read_profile,
             switch_profile,
             apply_lighting,

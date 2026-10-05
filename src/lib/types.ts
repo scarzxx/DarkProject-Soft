@@ -20,7 +20,7 @@ export interface DeviceSummary {
   id: string;
   registryId: string | null;
   styleName: string | null;
-  verified: boolean;
+  supported: boolean;
   known: boolean;
   connected: boolean;
   productName: string;
@@ -45,6 +45,15 @@ export interface LightingSettings {
   multiColor: boolean;
 }
 
+export interface LightingFeatureState {
+  effect: number;
+  brightness: number;
+  speed: number;
+  direction: number;
+  color: [number, number, number] | null;
+  multiColor: boolean;
+}
+
 export interface PerformanceSettings {
   pollingRate: number;
   inputLatency: number;
@@ -56,6 +65,16 @@ export interface SnapPair {
   kind: number;
   key1: number;
   key2: number;
+}
+
+export interface SnapTapState {
+  enabled: boolean;
+  pairs: SnapPair[];
+}
+
+export interface FeatureState {
+  lighting: LightingFeatureState | null;
+  snapTap: SnapTapState | null;
 }
 
 export interface RawKeyBinding {

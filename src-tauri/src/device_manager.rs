@@ -1,3 +1,4 @@
+use crate::drivers::transport::HidTransport;
 use crate::drivers::{self, ProtocolDriver};
 use crate::models::DeviceSummary;
 use crate::registry::{self, DeviceMetadata};
@@ -5,13 +6,13 @@ use hidapi::{DeviceInfo, HidApi};
 use std::collections::HashMap;
 use std::hash::Hash;
 
-fn score(info: &DeviceInfo) -> u8 {
-    u8::from(
-        info.product_string()
-            .unwrap_or_default()
-            .starts_with("DPKB_"),
-    ) * 4
-        + u8::from(info.usage_page() == 0xFF01) * 2
+fn score(registry: &[DeviceMetadata], info: &DeviceInfo) -> u8 {
+    u8::from(metadata(registry, info).is_some()) * 4
+        + u8::from(
+            info.product_string()
+                .unwrap_or_default()
+                .starts_with("DPKB_"),
+        ) * 2
 }
 
 fn metadata<'a>(registry: &'a [DeviceMetadata], info: &DeviceInfo) -> Option<&'a DeviceMetadata> {
@@ -46,15 +47,18 @@ fn detected<'a>(api: &'a HidApi, registry: &[DeviceMetadata]) -> Vec<&'a DeviceI
     let interfaces = api
         .device_list()
         .filter(|info| {
-            registry::candidate(
+            registry::interface_candidate(
                 registry,
                 info.vendor_id(),
+                info.product_id(),
                 info.product_string().unwrap_or_default(),
+                info.serial_number(),
+                info.usage_page(),
+                info.usage(),
             )
         })
         .collect();
-    // Serial descriptors may contain a model ID shared by multiple physical units.
-    // Keep every best-ranked path rather than merging identical keyboards.
+    // Keep distinct physical paths, but drop lower-ranked duplicate collections.
     highest_ranked(
         interfaces,
         |info| {
@@ -65,7 +69,7 @@ fn detected<'a>(api: &'a HidApi, registry: &[DeviceMetadata]) -> Vec<&'a DeviceI
                 info.serial_number(),
             )
         },
-        |info| score(info),
+        |info| score(registry, info),
     )
 }
 
@@ -85,14 +89,124 @@ fn selected<'a>(
         .into_iter()
         .max_by_key(|info| {
             (
-                metadata(registry, info).is_some_and(drivers::available),
-                score(info),
+                metadata(registry, info).is_some_and(drivers::supported),
+                metadata(registry, info).is_some(),
+                score(registry, info),
             )
         })
         .ok_or_else(|| "No supported Dark Project keyboard found".into())
 }
 
-/// Enumerate known-vendor interfaces without transmitting HID reports.
+fn witmod_hardware_name(bytes: &[u8]) -> Option<String> {
+    let mut vendor = [0u8; 110];
+    let mut nonzero = 0usize;
+    for (index, byte) in bytes.iter().copied().take(110).enumerate() {
+        if byte != 0 {
+            vendor[index] = byte;
+            nonzero += 1;
+        }
+    }
+    if nonzero == 0 {
+        return None;
+    }
+    let printable = String::from_utf8_lossy(&vendor[..nonzero])
+        .chars()
+        .filter(|ch| ch.is_ascii_graphic() || *ch == ' ')
+        .collect::<String>();
+    let parts = printable.split(',').collect::<Vec<_>>();
+    if parts.len() < 2 {
+        return None;
+    }
+    let name = parts[parts.len() - 2].replace('_', ".");
+    (!name.trim().is_empty()).then(|| name.trim().to_owned())
+}
+
+fn witmod_block<T: HidTransport>(device: &T, expected_index: u8) -> Option<Vec<u8>> {
+    // The vendor waits roughly 500 ms after command 13. Poll for up to two seconds
+    // per block so a normal delayed response is not mistaken for an absent device.
+    for _ in 0..8 {
+        let mut data = vec![0u8; 128];
+        let length = device.read_timeout(&mut data, 250).ok()?;
+        if length == 0 {
+            continue;
+        }
+        if length > data.len() {
+            return None;
+        }
+        data.truncate(length);
+        let payload = if data.len() >= 64 && data[0] == 1 && data[1] == 13 {
+            &data[1..]
+        } else {
+            &data[..]
+        };
+        if payload.len() < 63 || payload[0] != 13 || payload[3] != expected_index {
+            continue;
+        }
+        return Some(payload[5..63].to_vec());
+    }
+    None
+}
+
+fn query_witmod_hardware_name<T: HidTransport>(device: &T) -> Option<String> {
+    let mut request = vec![0u8; 64];
+    request[0] = 1; // numbered HID output report
+    request[1] = 13; // vendor identity/version query
+    if device.write(&request).ok()? != request.len() {
+        return None;
+    }
+    let mut combined = witmod_block(device, 0)?;
+    combined.extend(witmod_block(device, 1)?);
+    witmod_hardware_name(&combined)
+}
+
+/// Vendor Witmod devices with generic USB descriptors identify themselves through command 13.
+/// This probe only requests identity data and never sends a configuration command.
+fn probe_witmod_identity<'a>(
+    api: &HidApi,
+    registry: &'a [DeviceMetadata],
+    info: &DeviceInfo,
+) -> Option<&'a DeviceMetadata> {
+    let pair_models = registry
+        .iter()
+        .filter(|device| registry::connection_matches(device, info.vendor_id(), info.product_id()))
+        .collect::<Vec<_>>();
+    if pair_models.is_empty()
+        || pair_models
+            .iter()
+            .any(|device| device.router_id != "WitmodSeries")
+    {
+        return None;
+    }
+    let candidates = pair_models
+        .into_iter()
+        .filter(|device| registry::interface_matches(device, info.usage_page(), info.usage()))
+        .collect::<Vec<_>>();
+    if candidates.is_empty() {
+        return None;
+    }
+
+    let device = info.open_device(api).ok()?;
+    let hardware_name = query_witmod_hardware_name(&device)?;
+    candidates.into_iter().find(|candidate| {
+        [
+            candidate.hardware_name.as_str(),
+            candidate.product_name.as_str(),
+            candidate.model_name.as_str(),
+        ]
+        .into_iter()
+        .any(|name| name.replace('_', ".").eq_ignore_ascii_case(&hardware_name))
+    })
+}
+
+fn resolved_metadata<'a>(
+    api: &HidApi,
+    registry: &'a [DeviceMetadata],
+    info: &DeviceInfo,
+) -> Option<&'a DeviceMetadata> {
+    metadata(registry, info).or_else(|| probe_witmod_identity(api, registry, info))
+}
+
+/// Enumerate known configuration interfaces without transmitting HID reports.
 pub fn scan_devices() -> Result<Vec<DeviceSummary>, String> {
     let api = HidApi::new().map_err(|error| error.to_string())?;
     let registry = registry::devices()?;
@@ -102,14 +216,14 @@ pub fn scan_devices() -> Result<Vec<DeviceSummary>, String> {
         .collect())
 }
 
-/// Read identity/profile headers only for the selected verified model.
+/// Resolve the selected device. Ambiguous Witmod identities may use the vendor read-only query.
 pub fn scan_device(id: Option<&str>) -> Result<DeviceSummary, String> {
     let api = HidApi::new().map_err(|error| error.to_string())?;
     let registry = registry::devices()?;
     let info = selected(&api, registry, id)?;
-    let model = metadata(registry, info);
+    let model = resolved_metadata(&api, registry, info);
     let mut summary = registry::summary(info, model);
-    if summary.verified {
+    if summary.supported {
         let driver = drivers::open(&api, info, model)?;
         summary.firmware = driver
             .firmware_version()
@@ -119,17 +233,19 @@ pub fn scan_device(id: Option<&str>) -> Result<DeviceSummary, String> {
     Ok(summary)
 }
 
-/// Revalidate selected physical identity before every read or write operation.
+/// Revalidate physical identity and exact HID collection before every read or write operation.
 pub fn open_driver(id: Option<&str>) -> Result<Box<dyn ProtocolDriver>, String> {
     let api = HidApi::new().map_err(|error| error.to_string())?;
     let registry = registry::devices()?;
     let info = selected(&api, registry, id)?;
-    drivers::open(&api, info, metadata(registry, info))
+    let model = resolved_metadata(&api, registry, info);
+    drivers::open(&api, info, model)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::highest_ranked;
+    use super::{highest_ranked, query_witmod_hardware_name, witmod_hardware_name};
+    use crate::drivers::transport::mock::{Event, MockTransport};
 
     #[test]
     fn identical_models_keep_distinct_paths_and_legacy_tie_order() {
@@ -159,5 +275,46 @@ mod tests {
     fn absent_devices_produce_an_empty_list() {
         let interfaces: Vec<(u16, u8)> = vec![];
         assert!(highest_ranked(interfaces, |info| info.0, |info| info.1).is_empty());
+    }
+
+    #[test]
+    fn witmod_identity_parser_matches_vendor_second_last_field_rule() {
+        let mut response = [0u8; 116];
+        let text = b"KEYBOARD,GK8170MDPRGBEU,V1_2_3_4";
+        response[..text.len()].copy_from_slice(text);
+        assert_eq!(
+            witmod_hardware_name(&response).as_deref(),
+            Some("GK8170MDPRGBEU")
+        );
+        assert_eq!(witmod_hardware_name(&[0; 116]), None);
+    }
+
+    #[test]
+    fn witmod_identity_query_uses_only_command_13_and_ordered_input_blocks() {
+        let mock = MockTransport::default();
+        let mut combined = [0u8; 116];
+        let text = b"KEYBOARD,GK8170MDPRGBEU,V1_2_3_4";
+        combined[..text.len()].copy_from_slice(text);
+        for (index, chunk) in combined.chunks(58).enumerate() {
+            let mut report = vec![0u8; 64];
+            report[0] = 1;
+            report[1] = 13;
+            report[4] = index as u8;
+            report[6..64].copy_from_slice(chunk);
+            mock.input.borrow_mut().push_back(report);
+        }
+        assert_eq!(
+            query_witmod_hardware_name(&mock).as_deref(),
+            Some("GK8170MDPRGBEU")
+        );
+        let events = mock.events.borrow();
+        assert!(matches!(
+            events.first(),
+            Some(Event::Output(data)) if data.len() == 64 && data[0] == 1 && data[1] == 13
+        ));
+        assert_eq!(
+            events.iter().filter(|event| matches!(event, Event::Output(_))).count(),
+            1
+        );
     }
 }

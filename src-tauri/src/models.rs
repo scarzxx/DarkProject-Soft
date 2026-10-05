@@ -25,7 +25,7 @@ pub struct DeviceSummary {
     pub registry_id: Option<String>,
     pub style_name: Option<String>,
     pub known: bool,
-    pub verified: bool,
+    pub supported: bool,
     pub connected: bool,
     pub product_name: String,
     pub serial_number: Option<String>,
@@ -51,6 +51,18 @@ pub struct LightingSettings {
     pub multi_color: bool,
 }
 
+/// Family decoders may not expose an RGB value for effects whose color is automatic.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LightingFeatureState {
+    pub effect: u8,
+    pub brightness: u8,
+    pub speed: u8,
+    pub direction: u8,
+    pub color: Option<[u8; 3]>,
+    pub multi_color: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PerformanceSettings {
@@ -66,6 +78,20 @@ pub struct SnapPair {
     pub kind: u8,
     pub key1: u8,
     pub key2: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SnapTapState {
+    pub enabled: bool,
+    pub pairs: Vec<SnapPair>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureState {
+    pub lighting: Option<LightingFeatureState>,
+    pub snap_tap: Option<SnapTapState>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

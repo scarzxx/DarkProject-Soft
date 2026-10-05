@@ -29,6 +29,7 @@ import { translateError } from "./lib/messages";
 import type { MessageKey, MessageParameters } from "./lib/messages";
 import type {
   DeviceSummary,
+  FeatureState,
   LightingSettings,
   MacroEvent,
   Page,
@@ -49,6 +50,39 @@ const keyHid = (name: unknown, fallback: number) => typeof name === "string"
   ? (physicalKeyHid(name) || fallback)
   : (typeof name === "number" ? name : fallback);
 
+const RISK_COPY = {
+  cs: {
+    title: "Použití na vlastní nebezpečí",
+    body: [
+      "Dark Control je neoficiální komunitní software a není vydáván ani podporován společností Dark Project.",
+      "Program komunikuje přímo s firmwarem klávesnice a může měnit její nastavení. Použití může vést ke ztrátě nastavení, chybné funkci nebo v krajním případě k poškození zařízení.",
+      "Autoři ani přispěvatelé neposkytují žádnou záruku a nenesou odpovědnost za škody, ztrátu dat ani jiné následky. Pokračujete na vlastní nebezpečí.",
+    ],
+    check: "Rozumím výše uvedenému a souhlasím s použitím na vlastní nebezpečí.",
+    accept: "Souhlasím a pokračuji",
+  },
+  sk: {
+    title: "Použitie na vlastné riziko",
+    body: [
+      "Dark Control je neoficiálny komunitný softvér a nie je vydávaný ani podporovaný spoločnosťou Dark Project.",
+      "Program komunikuje priamo s firmvérom klávesnice a môže meniť jej nastavenia. Použitie môže viesť k strate nastavení, nesprávnej funkcii alebo v krajnom prípade k poškodeniu zariadenia.",
+      "Autori ani prispievatelia neposkytujú žiadnu záruku a nenesú zodpovednosť za škody, stratu dát ani iné následky. Pokračujete na vlastné riziko.",
+    ],
+    check: "Rozumiem vyššie uvedenému a súhlasím s použitím na vlastné riziko.",
+    accept: "Súhlasím a pokračujem",
+  },
+  en: {
+    title: "Use at your own risk",
+    body: [
+      "Dark Control is unofficial community software and is not published, endorsed, or supported by Dark Project.",
+      "The application communicates directly with keyboard firmware and can change device settings. Use may cause lost settings, malfunction, or in extreme cases device damage.",
+      "The authors and contributors provide no warranty and accept no responsibility for damage, data loss, or other consequences. You continue entirely at your own risk.",
+    ],
+    check: "I understand the notice above and agree to use Dark Control at my own risk.",
+    accept: "I agree and continue",
+  },
+} as const;
+
 function PageTitle({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) {
   return <div className="page-title">
     <div><h2>{title}</h2><p>{subtitle}</p></div>
@@ -62,11 +96,14 @@ type StatusMessage =
 
 export default function App() {
   const { language, t } = useLanguage();
+  const [riskAccepted, setRiskAccepted] = useState(false);
+  const [riskChecked, setRiskChecked] = useState(false);
   const [page, setPage] = useState<Page>("device");
   const [device, setDevice] = useState<DeviceSummary | null>(null);
   const [devices, setDevices] = useState<DeviceSummary[]>([]);
   const [profile, setProfile] = useState(0);
   const [state, setState] = useState<ProfileState | null>(null);
+  const [hardwareReady, setHardwareReady] = useState(false);
   const [lighting, setLighting] = useState<LightingSettings>(DEF_LIGHT);
   const [performance, setPerformance] = useState<PerformanceSettings>(DEF_PERF);
   const [snapEnabled, setSnapEnabled] = useState(false);
@@ -90,7 +127,8 @@ export default function App() {
     : device ? deviceLabel(device) : t("Dark Project keyboard");
   const firmwareName = device?.firmware === "preview" ? t("Preview")
     : device?.firmware === "unknown" ? t("Unknown") : device?.firmware ?? "—";
-  const canWrite = !!device?.verified && state !== null && !busy;
+  const canWrite = !!device?.supported && hardwareReady && !busy;
+  const risk = RISK_COPY[language];
 
   const run = async (label: Exclude<StatusMessage, { error: string }>, fn: () => Promise<void>) => {
     if (operationPending.current) return;
@@ -102,6 +140,7 @@ export default function App() {
       setStatus({ ...label, completed: true });
     } catch (e) {
       console.error(e);
+      setHardwareReady(false);
       setStatus({ error: e instanceof Error ? e.message : String(e) });
     } finally {
       operationPending.current = false;
@@ -121,18 +160,42 @@ export default function App() {
     setActiveMacro((current) => loaded.some((m) => m.id === current) ? current : (loaded[0]?.id ?? null));
   };
 
-  const readBack = async (p = profile) => {
-    const s = await api.readProfile(p, device?.id);
-    hydrate(s);
+  const hydrateFeatures = (s: FeatureState) => {
+    setState(null);
+    setPerformance(DEF_PERF);
+    setMacros([]);
+    setActiveMacro(null);
+    if (s.lighting) {
+      const color = s.lighting.color ?? DEF_LIGHT.color;
+      setLighting({ ...s.lighting, color });
+      setHexValue(hex(color));
+    }
+    if (s.snapTap) {
+      setSnapEnabled(s.snapTap.enabled);
+      setSnapPairs(s.snapTap.pairs);
+    }
+  };
+
+  const hydrateEditable = (s: api.EditableDeviceState) => {
+    if (s.profileState) hydrate(s.profileState);
+    else hydrateFeatures(s.features);
+  };
+
+  const readBack = async (p = profile, target = device) => {
+    if (!target) throw new Error("Selected device is no longer connected");
+    hydrateEditable(await api.readDeviceState(target, p));
   };
 
   const loadDevice = (requestedId = device?.id) => run({ key: "Reading keyboard" }, async () => {
+    setHardwareReady(false);
     setState(null);
     setDevice(null);
     setSelectedKey(null);
     setLayer(1);
     setLighting(DEF_LIGHT);
+    setPerformance(DEF_PERF);
     setHexValue(hex(DEF_LIGHT.color));
+    setSnapEnabled(false);
     setSnapPairs([]);
     setMacros([]);
     setActiveMacro(null);
@@ -142,18 +205,26 @@ export default function App() {
     const p = Math.max(0, Math.min(d.profiles - 1, d.activeProfile ?? 0));
     setDevice(d);
     setProfile(p);
-    if (d.verified) hydrate(await api.readProfile(p, d.id));
-    else setPage("device");
+    if (d.supported) {
+      await readBack(p, d);
+      setHardwareReady(true);
+    } else {
+      setPage("device");
+    }
   });
 
-  useEffect(() => { void loadDevice(); }, []);
+  useEffect(() => {
+    if (riskAccepted) void loadDevice();
+  }, [riskAccepted]);
 
   const changeProfile = (p: number) => run({ key: "Switching to Profile {number}", parameters: { number: p + 1 } }, async () => {
+    setHardwareReady(false);
     await api.switchProfile(p, device?.id);
     await delay(90);
     setProfile(p);
     setSelectedKey(null);
     await readBack(p);
+    setHardwareReady(true);
   });
 
   const caps = device?.capabilities;
@@ -325,8 +396,8 @@ export default function App() {
   </Panel>;
 
   const renderDevice = () => <>
-    <PageTitle title={t("Device")} subtitle={t(device?.connected && device.verified ? "Live hardware state read directly from the keyboard." : "Device identity and vendor layout metadata.")} action={<button className="primary-btn" disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
-    {device && !device.verified && <div className="notice verification-notice"><Info size={18}/><span>{t(device.known ? "Unverified model: layout preview only. HID commands are disabled." : "Unknown model: no matching layout or verified driver. HID commands are disabled.")}</span></div>}
+    <PageTitle title={t("Device")} subtitle={t(device?.connected && device.supported && hardwareReady ? "Live hardware state read directly from the keyboard." : "Device identity and vendor layout metadata.")} action={<button className="primary-btn" disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={16}/> {t("Reload hardware")}</button>} />
+    {device && !device.supported && <div className="notice verification-notice"><Info size={18}/><span>{t("Unknown model: no matching layout or verified driver. HID commands are disabled.")}</span></div>}
     <div className="device-page-grid">
       {devicePanel}
       <Panel title={deviceName} icon={Cpu} className="device-card page-device-card">
@@ -334,12 +405,12 @@ export default function App() {
         <dl>
           <div><dt>{t("Connection")}</dt><dd>{device?.connected ? t("USB · Connected") : t("Not connected")}</dd></div>
           <div><dt>{t("Firmware")}</dt><dd>{firmwareName}</dd></div>
-          <div><dt>{t("Active profile")}</dt><dd>{device?.verified ? t("Profile {number}", { number: profile + 1 }) : "—"}</dd></div>
+          <div><dt>{t("Active profile")}</dt><dd>{device?.supported && hardwareReady ? t("Profile {number}", { number: profile + 1 }) : "—"}</dd></div>
           <div><dt>{t("Serial")}</dt><dd>{device?.serialNumber ?? "—"}</dd></div>
           <div><dt>{t("Layout")}</dt><dd>{device?.layout === "Unknown" ? t("Unknown") : device?.layout ?? "—"}</dd></div>
           <div><dt>{t("Series")}</dt><dd>{device?.protocol === "Unknown" ? t("Unknown") : device?.protocol ?? "—"}</dd></div>
           <div><dt>{t("Layout style")}</dt><dd>{device?.styleName ?? "—"}</dd></div>
-          <div><dt>{t("Verification")}</dt><dd>{t(device?.verified ? "Verified" : "Unverified")}</dd></div>
+          <div><dt>{t("Supported")}</dt><dd>{t(device?.supported ? "Supported" : "Not exposed")}</dd></div>
         </dl>
         <div className="capabilities">
           {device && ([
@@ -349,7 +420,7 @@ export default function App() {
             ["Profiles", "profiles"], ["TFT display", "tft"],
             ["Synchronization", "sync"], ["Actuation", "actuation"],
           ] as const).filter(([, capability]) => device.advertisedCapabilities[capability]).map(([name, capability]) =>
-            <span className={caps?.[capability] ? "supported" : "unsupported"} key={capability}>{t(name)}<b>{t(caps?.[capability] ? "Supported" : "Unverified")}</b></span>)}
+            <span className={caps?.[capability] ? "supported" : "unsupported"} key={capability}>{t(name)}<b>{t(caps?.[capability] ? "Supported" : "Not exposed")}</b></span>)}
         </div>
       </Panel>
     </div>
@@ -473,24 +544,42 @@ export default function App() {
     }
   };
 
-  return <div className={`app page-${page}`}>
-    <aside className="sidebar">
-      <div className="brand"><h1>DARK <span>CONTROL</span></h1><p>{t("for Dark Project keyboards")}</p></div>
-      <nav>{nav.map((n) => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => setPage(n.id)}><n.icon size={20}/><span>{t(n.label)}</span></button>)}</nav>
-      <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.4.0</small></div>
-    </aside>
-    <main className="main">
-      <header className="topbar">
-        <div className="device-mini"><div className="mini-kbd"><KeyboardIcon size={20}/></div><div><strong>{deviceName}</strong><span className={`connection ${device?.connected ? "on" : ""}`}><i/>{device?.connected ? t("Connected") : t("Waiting for device")}</span></div></div>
-        <div className="meta"><span>VID 0x{device?.vendorId.toString(16).toUpperCase() ?? "—"}</span><span>PID 0x{device?.productId.toString(16).toUpperCase() ?? "—"}</span><span>{firmwareName}</span></div>
-        <button className="icon-btn" title={t("Reload from keyboard")} disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={17} className={busy ? "spin" : ""}/></button>
-        <div className="grow"/>
-        {devices.length > 0 && <DevicePicker devices={devices} selectedId={device?.id} disabled={!!busy} onSelect={(id) => void loadDevice(id)}/>}
-        {caps?.profiles && <select className="profile-select" disabled={!canWrite} aria-label={t("Active profile")} value={profile} onChange={(e) => void changeProfile(+e.target.value)}>{Array.from({ length: device?.profiles ?? 0 }, (_, p) => <option key={p} value={p}>{t("Profile {number}", { number: p + 1 })}</option>)}</select>}
-        <input hidden ref={fileRef} type="file" accept=".dp,.json" onChange={(e) => e.target.files?.[0] && void importDp(e.target.files[0])}/>
-      </header>
-      <div className="workspace">{renderPage()}</div>
-      <footer className="statusbar" role="status"><span className={busy ? "busy-dot" : "ok-dot"}/>{"error" in status ? translateError(language, status.error) : status.completed ? t("Completed: {operation}", { operation: t(status.key, status.parameters) }) : t(status.key, status.parameters)}</footer>
-    </main>
-  </div>;
+  return <>
+    <div className={`app page-${page}`}>
+      <aside className="sidebar">
+        <div className="brand"><h1>DARK <span>CONTROL</span></h1><p>{t("for Dark Project keyboards")}</p></div>
+        <nav>{nav.map((n) => <button key={n.id} className={page === n.id ? "active" : ""} onClick={() => setPage(n.id)}><n.icon size={20}/><span>{t(n.label)}</span></button>)}</nav>
+        <div className="side-foot"><div className="pulse"><i/><i/><i/><i/><i/></div><b>DARK PROJECT</b><small>v0.4.0</small></div>
+      </aside>
+      <main className="main">
+        <header className="topbar">
+          <div className="device-mini"><div className="mini-kbd"><KeyboardIcon size={20}/></div><div><strong>{deviceName}</strong><span className={`connection ${device?.connected ? "on" : ""}`}><i/>{device?.connected ? t("Connected") : t("Waiting for device")}</span></div></div>
+          <div className="meta"><span>VID 0x{device?.vendorId.toString(16).toUpperCase() ?? "—"}</span><span>PID 0x{device?.productId.toString(16).toUpperCase() ?? "—"}</span><span>{firmwareName}</span></div>
+          <button className="icon-btn" title={t("Reload from keyboard")} disabled={!!busy} onClick={() => void loadDevice()}><RefreshCw size={17} className={busy ? "spin" : ""}/></button>
+          <div className="grow"/>
+          {devices.length > 0 && <DevicePicker devices={devices} selectedId={device?.id} disabled={!!busy} onSelect={(id) => void loadDevice(id)}/>} 
+          {caps?.profiles && <select className="profile-select" disabled={!canWrite} aria-label={t("Active profile")} value={profile} onChange={(e) => void changeProfile(+e.target.value)}>{Array.from({ length: device?.profiles ?? 0 }, (_, p) => <option key={p} value={p}>{t("Profile {number}", { number: p + 1 })}</option>)}</select>}
+          <input hidden ref={fileRef} type="file" accept=".dp,.json" onChange={(e) => e.target.files?.[0] && void importDp(e.target.files[0])}/>
+        </header>
+        <div className="workspace">{renderPage()}</div>
+        <footer className="statusbar" role="status"><span className={busy ? "busy-dot" : "ok-dot"}/>{"error" in status ? translateError(language, status.error) : status.completed ? t("Completed: {operation}", { operation: t(status.key, status.parameters) }) : t(status.key, status.parameters)}</footer>
+      </main>
+    </div>
+    {!riskAccepted && <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="risk-title"
+      style={{ position: "fixed", inset: 0, zIndex: 10000, display: "grid", placeItems: "center", padding: 24, background: "rgba(3,5,8,.92)", backdropFilter: "blur(14px)" }}
+    >
+      <div style={{ width: "min(620px, 100%)", border: "1px solid #47365f", borderRadius: 14, background: "linear-gradient(145deg,#121923,#0b0f15)", boxShadow: "0 24px 80px #000b", padding: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}><Info size={24} color="#b77aff"/><h2 id="risk-title" style={{ margin: 0, fontSize: 22 }}>{risk.title}</h2></div>
+        <div style={{ display: "grid", gap: 10, color: "#aeb7c4", fontSize: 13, lineHeight: 1.55 }}>{risk.body.map((paragraph) => <p key={paragraph} style={{ margin: 0 }}>{paragraph}</p>)}</div>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 20, padding: 14, border: "1px solid #2c3643", borderRadius: 9, background: "#0c1219", cursor: "pointer", fontSize: 12, lineHeight: 1.45 }}>
+          <input type="checkbox" checked={riskChecked} onChange={(event) => setRiskChecked(event.target.checked)} style={{ marginTop: 2 }}/>
+          <span>{risk.check}</span>
+        </label>
+        <button className="primary-btn" style={{ width: "100%", height: 40, marginTop: 14 }} disabled={!riskChecked} onClick={() => setRiskAccepted(true)}>{risk.accept}</button>
+      </div>
+    </div>}
+  </>;
 }

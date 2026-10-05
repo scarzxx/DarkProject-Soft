@@ -3,25 +3,19 @@ import test from "node:test";
 import { loadTypescript } from "./load-typescript.mjs";
 
 const api = await loadTypescript(new URL("../src/lib/api.ts", import.meta.url));
-const verifiedId = "0x342D0xE40F012";
+const bushidoId = "0x342D0xE40F012";
 
-test("browser preview reads Bushido profiles and refuses every unverified model", async () => {
+test("browser preview exposes every registered model as supported", async () => {
   const devices = await api.listDevices();
   assert.equal(devices.length, 45);
-  assert.equal((await api.scanDevice()).registryId, verifiedId);
-  assert.equal((await api.readProfile(1, verifiedId)).profile, 1);
-  for (const device of devices.filter((device) => !device.verified)) {
-    assert.equal((await api.scanDevice(device.id)).verified, false);
-    const commands = [
-      () => api.readProfile(0, device.id),
-      () => api.switchProfile(0, device.id),
-      () => api.applyLighting(0, {}, device.id),
-      () => api.applyPerformance(0, {}, device.id),
-      () => api.applySnapTap(0, false, [], device.id),
-      () => api.applyKeyBinding(0, 1, {}, device.id),
-      () => api.writeMacro(1, [], device.id),
-    ];
-    for (const command of commands) await assert.rejects(command, /unverified/);
+  assert.ok(devices.every((device) => device.supported));
+  assert.equal((await api.scanDevice()).registryId, bushidoId);
+  assert.equal((await api.readProfile(1, bushidoId)).profile, 1);
+  for (const device of devices) {
+    assert.equal((await api.scanDevice(device.id)).supported, true);
+    const features = await api.readFeatures(0, device.id);
+    assert.ok("lighting" in features);
+    assert.ok("snapTap" in features);
   }
   await assert.rejects(() => api.scanDevice("unknown"), /no longer connected/);
   await assert.rejects(() => api.scanDevice(""), /no longer connected/);
@@ -47,14 +41,19 @@ test("a disconnected native selection never falls back to another device", async
   }
 });
 
-test("native commands keep their original payload and target the selected HID path", async () => {
+test("native commands keep payloads, expose feature snapshots and target the selected HID path", async () => {
   const calls = [];
   const previous = globalThis.window;
+  const features = {
+    lighting: { effect: 8, brightness: 80, speed: 50, direction: 0, color: [1, 2, 3], multiColor: false },
+    snapTap: { enabled: true, pairs: [{ kind: 0, key1: 4, key2: 7 }] },
+  };
   globalThis.window = {
     __TAURI_INTERNALS__: {
       invoke: async (command, payload) => {
         calls.push({ command, payload });
         if (command === "scan_devices") return [];
+        if (command === "read_features") return features;
         if (command === "read_profile") return { profile: payload.profile };
         return { id: payload.deviceId };
       },
@@ -63,7 +62,16 @@ test("native commands keep their original payload and target the selected HID pa
   try {
     assert.deepEqual(await api.listDevices(), []);
     assert.equal((await api.scanDevice("selected-hid-path")).id, "selected-hid-path");
+    assert.deepEqual(await api.readFeatures(0, "selected-hid-path"), features);
     assert.equal((await api.readProfile(2, "selected-hid-path")).profile, 2);
+    const bushido = {
+      id: "selected-hid-path",
+      registryId: bushidoId,
+      supported: true,
+    };
+    const state = await api.readDeviceState(bushido, 1);
+    assert.equal(state.profileState.profile, 1);
+    assert.equal(state.features, null);
     await api.switchProfile(2, "selected-hid-path");
     const settings = { effect: 8, brightness: 80, speed: 50, direction: 0, color: [1, 2, 3], multiColor: false };
     await api.applyLighting(2, settings, "selected-hid-path");
@@ -78,7 +86,9 @@ test("native commands keep their original payload and target the selected HID pa
     assert.deepEqual(calls, [
       { command: "scan_devices", payload: {} },
       { command: "scan_device", payload: { deviceId: "selected-hid-path" } },
+      { command: "read_features", payload: { profile: 0, deviceId: "selected-hid-path" } },
       { command: "read_profile", payload: { profile: 2, deviceId: "selected-hid-path" } },
+      { command: "read_profile", payload: { profile: 1, deviceId: "selected-hid-path" } },
       { command: "switch_profile", payload: { profile: 2, deviceId: "selected-hid-path" } },
       { command: "apply_lighting", payload: { profile: 2, settings, deviceId: "selected-hid-path" } },
       { command: "apply_performance", payload: { profile: 2, settings: performance, deviceId: "selected-hid-path" } },

@@ -14,7 +14,8 @@ pub mod vendor;
 mod witmod;
 
 use crate::models::{
-    LightingSettings, MacroEvent, PerformanceSettings, ProfileState, RawKeyBinding, SnapPair,
+    FeatureState, LightingFeatureState, LightingSettings, MacroEvent, PerformanceSettings,
+    ProfileState, RawKeyBinding, SnapPair, SnapTapState,
 };
 use crate::registry::DeviceMetadata;
 use hidapi::{DeviceInfo, HidApi};
@@ -43,30 +44,32 @@ pub fn descriptor(router_id: &str) -> Option<&'static DriverDescriptor> {
     DRIVERS.iter().find(|driver| driver.router_id == router_id)
 }
 
-/// Verification belongs to the individual model, never just to shared USB IDs.
-pub fn available(metadata: &DeviceMetadata) -> bool {
-    metadata.verified
-        && crate::registry::devices().is_ok_and(|devices| {
-            devices.iter().any(|device| {
-                device.id == metadata.id
-                    && device.router_id == metadata.router_id
-                    && device.style_name == metadata.style_name
-                    && device.verified
-            })
+/// Every canonical registry model is supported when its protocol family is implemented.
+pub fn supported(metadata: &DeviceMetadata) -> bool {
+    crate::registry::devices().is_ok_and(|devices| {
+        devices.iter().any(|device| {
+            device.id == metadata.id
+                && device.router_id == metadata.router_id
+                && device.style_name == metadata.style_name
         })
-        && descriptor(&metadata.router_id).is_some_and(|driver| driver.implemented)
+    }) && descriptor(&metadata.router_id).is_some_and(|driver| driver.implemented)
 }
 
-/// Reject unverified drivers before constructing or opening any HID transport.
-pub fn ensure_available(metadata: Option<&DeviceMetadata>) -> Result<(), String> {
-    if metadata.is_some_and(available) {
+#[cfg(test)]
+pub fn available(metadata: &DeviceMetadata) -> bool {
+    supported(metadata)
+}
+
+/// Reject unknown or unsupported identities before constructing a HID transport.
+pub fn ensure_supported(metadata: Option<&DeviceMetadata>) -> Result<(), String> {
+    if metadata.is_some_and(supported) {
         Ok(())
     } else {
-        Err("Device is unverified; HID commands are disabled".into())
+        Err("Device is unsupported; HID commands are disabled".into())
     }
 }
 
-/// Common command interface for independently verified protocol drivers.
+/// Stable UI command interface. Family-native codecs stay behind this boundary.
 pub trait ProtocolDriver {
     #[allow(dead_code)]
     fn vendor_request(&self, _request: &vendor::Request) -> Result<serde_json::Value, String> {
@@ -74,6 +77,7 @@ pub trait ProtocolDriver {
     }
     fn firmware_version(&self) -> Result<String, String>;
     fn current_profile(&self) -> Result<u8, String>;
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String>;
     fn read_profile(&self, profile: u8) -> Result<ProfileState, String>;
     fn switch_profile(&self, profile: u8) -> Result<(), String>;
     fn apply_lighting(&self, profile: u8, settings: &LightingSettings) -> Result<(), String>;
@@ -94,6 +98,23 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     }
     fn current_profile(&self) -> Result<u8, String> {
         common::Keyboard::current_profile(self).map_err(|error| error.to_string())
+    }
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String> {
+        let state = common::Keyboard::read_profile(self, profile).map_err(|error| error.to_string())?;
+        Ok(FeatureState {
+            lighting: Some(LightingFeatureState {
+                effect: state.lighting.effect,
+                brightness: state.lighting.brightness,
+                speed: state.lighting.speed,
+                direction: state.lighting.direction,
+                color: Some(state.lighting.color),
+                multi_color: state.lighting.multi_color,
+            }),
+            snap_tap: Some(SnapTapState {
+                enabled: state.snap_tap_enabled,
+                pairs: state.snap_tap_pairs,
+            }),
+        })
     }
     fn read_profile(&self, profile: u8) -> Result<ProfileState, String> {
         common::Keyboard::read_profile(self, profile).map_err(|error| error.to_string())
@@ -126,18 +147,21 @@ impl<T: transport::HidTransport> ProtocolDriver for common::Keyboard<T> {
     }
 }
 
-/// Open only the selected verified HID interface; retain the Bushido packet codec.
+/// Open a recognized model on its exact vendor configuration collection.
 pub fn open(
     api: &HidApi,
     info: &DeviceInfo,
     metadata: Option<&DeviceMetadata>,
 ) -> Result<Box<dyn ProtocolDriver>, String> {
-    ensure_available(metadata)?;
+    ensure_supported(metadata)?;
     let metadata = metadata.ok_or("Missing device metadata")?;
     let canonical = crate::registry::devices()?
         .iter()
         .find(|device| device.id == metadata.id)
         .ok_or("Unknown model")?;
+    if !crate::registry::interface_matches(canonical, info.usage_page(), info.usage()) {
+        return Err("Selected HID collection does not match the model registry".into());
+    }
     create_with_transport(
         info.open_device(api).map_err(|error| error.to_string())?,
         canonical,
@@ -148,21 +172,15 @@ pub fn open(
     )
 }
 
-/// Select by canonical model identity and router. Production access is gated in open.
+/// Select by canonical model identity and router. Unknown identities remain blocked.
 pub fn create_with_transport<T: transport::HidTransport + 'static>(
     transport: T,
     metadata: &'static DeviceMetadata,
     product_name: String,
     serial_number: Option<String>,
 ) -> Result<Box<dyn ProtocolDriver>, String> {
-    if !crate::registry::devices()?.iter().any(|device| {
-        device.id == metadata.id
-            && device.router_id == metadata.router_id
-            && device.style_name == metadata.style_name
-    }) {
-        return Err(
-            "unsupported/unverified: model/router/layout identity is not registered".into(),
-        );
+    if !supported(metadata) {
+        return Err("unsupported: model/router/layout identity is not registered".into());
     }
     if metadata.router_id == "CommonKeyboardSeries" {
         return Ok(Box::new(common::Keyboard {
@@ -186,7 +204,7 @@ fn codec(router_id: &str) -> Result<Box<dyn vendor::Codec>, String> {
         "SparkLinkSeries" => Box::new(sparklink::Driver),
         "HFDKBSeries" => Box::new(hfd::Driver),
         "HFDKBRGBSeries" => Box::new(hfd_rgb::Driver),
-        _ => return Err("unsupported/unverified: unknown routerID".into()),
+        _ => return Err("unsupported: unknown routerID".into()),
     })
 }
 
@@ -207,13 +225,41 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
             vendor::unsupported("current hardware profile")
         }
     }
+    fn read_features(&self, profile: u8) -> Result<FeatureState, String> {
+        if profile != 0 {
+            return vendor::unsupported("nonzero family-native profile");
+        }
+        let capabilities = crate::registry::usable_capabilities(self.metadata);
+        let lighting = if capabilities.lighting {
+            Some(
+                serde_json::from_value(self.execute(&vendor::Request::ReadLighting)?)
+                    .map_err(|error| format!("Invalid family lighting response: {error}"))?,
+            )
+        } else {
+            None
+        };
+        let snap_tap = if capabilities.snap_tap {
+            Some(
+                serde_json::from_value(self.execute(&vendor::Request::ReadSnap)?)
+                    .map_err(|error| format!("Invalid family Snap Tap response: {error}"))?,
+            )
+        } else {
+            None
+        };
+        Ok(FeatureState { lighting, snap_tap })
+    }
     fn read_profile(&self, _profile: u8) -> Result<ProfileState, String> {
-        vendor::unsupported("complete Common ProfileState is not a family-native snapshot; use individual read operations")
+        vendor::unsupported(
+            "complete Common ProfileState is not a family-native snapshot; use feature reads",
+        )
     }
     fn switch_profile(&self, _profile: u8) -> Result<(), String> {
         vendor::unsupported("profile switching")
     }
     fn apply_lighting(&self, profile: u8, settings: &LightingSettings) -> Result<(), String> {
+        if !crate::registry::usable_capabilities(self.metadata).lighting {
+            return vendor::unsupported("lighting adapter for this family/model");
+        }
         if profile != 0 {
             return vendor::unsupported("nonzero family-native profile");
         }
@@ -228,6 +274,9 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
         vendor::unsupported("performance")
     }
     fn apply_snap_tap(&self, profile: u8, enabled: bool, pairs: &[SnapPair]) -> Result<(), String> {
+        if !crate::registry::usable_capabilities(self.metadata).snap_tap {
+            return vendor::unsupported("Snap Tap adapter for this family/model");
+        }
         if profile != 0 {
             return vendor::unsupported("nonzero family-native profile");
         }
@@ -245,32 +294,46 @@ impl<T: transport::HidTransport> ProtocolDriver for vendor::Keyboard<T> {
     ) -> Result<(), String> {
         vendor::unsupported("Common single-key patch is not a complete family-native key table")
     }
-    fn write_macro(&self, id: u8, events: &[MacroEvent]) -> Result<(), String> {
-        self.execute(&vendor::Request::WriteMacro {
-            id,
-            name: format!("Macro {id}"),
-            events: events.to_vec(),
-        })
-        .map(|_| ())
+    fn write_macro(&self, _id: u8, _events: &[MacroEvent]) -> Result<(), String> {
+        vendor::unsupported(
+            "standalone macro writes are not exposed until the family table semantics are supported",
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::drivers::transport::mock::MockTransport;
+
     #[test]
-    fn unverified_drivers_and_unknown_models_never_grant_transport_access() {
-        assert!(ensure_available(None).is_err());
+    fn all_registered_models_grant_driver_access_and_unknown_models_do_not() {
+        assert!(ensure_supported(None).is_err());
         for device in crate::registry::devices().unwrap() {
-            assert_eq!(
-                ensure_available(Some(device)).is_ok(),
-                device.product_name == "DPKB_BUSHIDO_87_ANSI"
-            );
+            assert!(ensure_supported(Some(device)).is_ok());
         }
-        for driver in DRIVERS.iter().skip(1) {
+        for driver in &DRIVERS {
             assert!(driver.implemented);
         }
     }
+
+    #[test]
+    fn disabled_family_adapter_rejects_before_sending_transport_events() {
+        let metadata = crate::registry::devices()
+            .unwrap()
+            .iter()
+            .find(|device| device.router_id == "TFTKeyboardSeries")
+            .unwrap();
+        let driver = vendor::Keyboard::new(
+            MockTransport::default(),
+            Box::new(tft::Driver),
+            metadata,
+        )
+        .unwrap();
+        assert!(ProtocolDriver::apply_snap_tap(&driver, 0, true, &[]).is_err());
+        assert!(driver.transport.events.borrow().is_empty());
+    }
+
     #[test]
     fn bushido_effect_wire_ids_and_limits_remain_unchanged() {
         let mapping = [

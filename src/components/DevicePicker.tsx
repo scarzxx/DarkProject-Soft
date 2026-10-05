@@ -71,7 +71,7 @@ export default function DevicePicker({ devices, selectedId, disabled, onSelect }
       <span className="device-picker-icon"><Keyboard size={18}/></span>
       <span className="device-picker-copy"><small>{t("Keyboard device")}</small>
         <strong>{selected ? deviceLabel(selected) : t("Select device")}</strong></span>
-      {selected && <span className={`device-picker-dot ${selected.verified ? "verified" : ""}`} />}
+      {selected && <span className={`device-picker-dot ${selected.supported ? "verified" : ""}`} />}
       <ChevronDown className="device-picker-chevron" size={16}/>
     </button>
     {open && <div id={menuId} className="device-picker-menu" role="dialog" aria-label={t("Select device")}>
@@ -97,8 +97,8 @@ export default function DevicePicker({ devices, selectedId, disabled, onSelect }
           <span className="device-option-copy"><strong>{deviceLabel(device)}</strong>
             <small>{device.layout} <span>/</span> {device.styleName ?? t("Unknown")}
               <span>/</span> {device.vendorId.toString(16).toUpperCase()}:{device.productId.toString(16).toUpperCase()}</small>
-            <span className={`device-option-status ${device.verified ? "verified" : ""}`}>
-              {device.verified && <ShieldCheck size={11}/>} {device.verified ? t("Verified") : t("Unverified")}
+            <span className={`device-option-status ${device.supported ? "verified" : ""}`}>
+              {device.supported && <ShieldCheck size={11}/>} {device.supported ? t("Supported") : t("Not exposed")}
               <span>/</span> {device.connected ? t("Connected") : t("Preview")}</span></span>
           {selectedId === device.id && <Check size={17} className="device-option-check"/>}
         </button>)}
