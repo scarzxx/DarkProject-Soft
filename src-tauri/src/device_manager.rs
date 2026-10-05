@@ -89,7 +89,7 @@ fn selected<'a>(
         .into_iter()
         .max_by_key(|info| {
             (
-                metadata(registry, info).is_some_and(drivers::available),
+                metadata(registry, info).is_some_and(drivers::supported),
                 metadata(registry, info).is_some(),
                 score(registry, info),
             )
@@ -223,7 +223,7 @@ pub fn scan_device(id: Option<&str>) -> Result<DeviceSummary, String> {
     let info = selected(&api, registry, id)?;
     let model = resolved_metadata(&api, registry, info);
     let mut summary = registry::summary(info, model);
-    if summary.verified {
+    if summary.supported {
         let driver = drivers::open(&api, info, model)?;
         summary.firmware = driver
             .firmware_version()
@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn witmod_identity_parser_matches_vendor_second_last_field_rule() {
-        let mut response = vec![0u8; 116];
+        let mut response = [0u8; 116];
         let text = b"KEYBOARD,GK8170MDPRGBEU,V1_2_3_4";
         response[..text.len()].copy_from_slice(text);
         assert_eq!(
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn witmod_identity_query_uses_only_command_13_and_ordered_input_blocks() {
         let mock = MockTransport::default();
-        let mut combined = vec![0u8; 116];
+        let mut combined = [0u8; 116];
         let text = b"KEYBOARD,GK8170MDPRGBEU,V1_2_3_4";
         combined[..text.len()].copy_from_slice(text);
         for (index, chunk) in combined.chunks(58).enumerate() {
