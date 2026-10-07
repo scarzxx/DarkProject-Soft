@@ -4,6 +4,7 @@ export type MessageParameters = Readonly<Record<string, string | number>>;
 export const LANGUAGE_KEY = "dark-control.language";
 
 export const MESSAGES = {
+  "Brightness adjusts in {step}% steps.": { cs: "Jas lze měnit po {step} %.", sk: "Jas možno meniť po {step} %." },
   "Updater is not configured in this build.": { cs: "Tato verze nemá nastavené aktualizace. Jsou dostupné v nakonfigurovaném release buildu.", sk: "Táto verzia nemá nastavené aktualizácie. Sú dostupné v nakonfigurovanom release builde." },
   "System tray": { cs: "Systémová lišta", sk: "Systémová lišta" },
   "Keep Dark Control running in the background.": { cs: "Nechte Dark Control běžet na pozadí.", sk: "Nechajte Dark Control bežať na pozadí." },

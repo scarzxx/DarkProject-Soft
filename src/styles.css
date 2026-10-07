@@ -56,6 +56,11 @@
   margin-top: 14px;
 }
 
+.brightness-step-note {
+  color: #8792a1;
+  font-size: 9px;
+}
+
 @media (min-width: 1181px) {
   .lighting-editor-card {
     position: sticky;

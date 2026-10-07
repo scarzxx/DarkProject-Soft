@@ -25,6 +25,7 @@ import { EFFECTS, EFFECT_NAME } from "./data/effects";
 import { getKeyboardKeys, getHidOptions, keyHid as physicalKeyHid, type KeyDef } from "./data/keyboard";
 import * as api from "./lib/api";
 import { useLanguage } from "./lib/i18n";
+import { getBrightnessControl } from "./lib/lighting";
 import { translateError } from "./lib/messages";
 import { hasRiskConsent, rememberRiskConsent } from "./lib/riskConsent";
 import type { MessageKey, MessageParameters } from "./lib/messages";
@@ -258,9 +259,10 @@ export default function App() {
 
   const effectMeta = EFFECTS.find((e) => e.id === lighting.effect) ?? EFFECTS.find((e) => e.id === 8)!;
   const visibleEffects = EFFECTS.filter((e) => e.id === 20 || caps?.lightingEffects.includes(e.id));
+  const brightnessControl = getBrightnessControl(device?.protocol, lighting.brightness);
 
   const applyLight = () => run({ key: "Applying lighting" }, async () => {
-    await api.applyLighting(profile, lighting, device?.id);
+    await api.applyLighting(profile, { ...lighting, brightness: brightnessControl.value }, device?.id);
     await delay(90);
     await readBack();
   });
@@ -439,7 +441,8 @@ export default function App() {
           </div>
           <div className="lighting-controls large-controls">
             <div className="setting-name"><small>{t("Selected effect")}</small><strong>{t(effectMeta.name)}</strong></div>
-            <Slider label={t("Brightness")} value={lighting.brightness} onChange={(v) => setLighting({ ...lighting, brightness: v })}/>
+            <Slider label={t("Brightness")} value={brightnessControl.value} step={brightnessControl.step} onChange={(v) => setLighting({ ...lighting, brightness: v })}/>
+            {brightnessControl.step > 1 && <small className="brightness-step-note">{t("Brightness adjusts in {step}% steps.", { step: brightnessControl.step })}</small>}
             {effectMeta.rate && <Slider label={t("Speed")} value={lighting.speed} onChange={(v) => setLighting({ ...lighting, speed: v })}/>}
             {effectMeta.direction && <div className="directions"><b>{t("Direction")}</b>{(["Right", "Up", "Left", "Down"] as const).slice(0, lighting.effect === 1 ? 2 : 4).map((direction, i) => <button key={direction} aria-label={t(direction)} aria-pressed={lighting.direction === i} className={lighting.direction === i ? "active" : ""} onClick={() => setLighting({ ...lighting, direction: i })}>{["→", "↑", "←", "↓"][i]}</button>)}</div>}
             {effectMeta.custom && <div className="notice"><Info size={16}/><span>{t("This build preserves the selected hardware custom preset. A per-key color editor is not available yet.")}</span></div>}
