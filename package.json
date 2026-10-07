@@ -2,6 +2,7 @@
   "name": "dark-control",
   "private": true,
   "version": "0.4.2",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "data:import": "node scripts/import-generated-data.mjs",
